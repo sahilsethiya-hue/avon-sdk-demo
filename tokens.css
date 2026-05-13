@@ -1,0 +1,267 @@
+/* ============================================================
+   AVON INDIA — DESIGN TOKENS
+   Source: live audit of www.avon.co.in (May 2026)
+   ============================================================ */
+
+:root {
+
+  /* ── BRAND COLORS ─────────────────────────────────────── */
+  --color-primary:        #E5004B;   /* Avon hot pink — CTAs, badges, stars, accents */
+  --color-primary-hover:  #c40040;   /* Darker on hover */
+  --color-primary-muted:  rgba(229, 0, 75, 0.10);  /* Soft pink tint bg */
+  --color-primary-overlay:rgba(229, 0, 75, 0.60);  /* Hero overlays */
+
+  --color-dark-navy:      #042436;   /* Nav links, icon strokes, deep text */
+  --color-dark-navy-30:   rgba(4, 36, 54, 0.30);
+
+  --color-dark:           #000000;   /* Pure black — body, headings */
+  --color-dark-alt:       #1A202C;   /* Near-black — unlock bar bg */
+  --color-dark-overlay-60:rgba(0, 0, 0, 0.60);
+  --color-dark-overlay-50:rgba(0, 0, 0, 0.50);
+  --color-dark-overlay-74:rgba(0, 0, 0, 0.74);
+
+  --color-white:          #FFFFFF;
+  --color-white-85:       rgba(255, 255, 255, 0.85);
+  --color-white-50:       rgba(255, 255, 255, 0.50);
+
+  /* ── NEUTRAL GRAYS ────────────────────────────────────── */
+  --color-gray-1:         #171717;   /* --clr-17 */
+  --color-gray-2:         #2C2C2C;   /* --clr-2c */
+  --color-gray-3:         #3A3A3A;   /* --COLOR-3A */
+  --color-gray-4:         #4B4B4B;
+  --color-gray-5:         #6B6B6B;   /* close to --clr-6f / --clr-73 */
+  --color-gray-6:         #848484;   /* --clr-84 */
+  --color-gray-7:         #9E9E9E;   /* UI muted text */
+  --color-gray-8:         #A7A7A7;   /* --COLOR-A7 */
+  --color-gray-9:         #B8B8B8;   /* --COLOR-B8 */
+  --color-gray-10:        #C4C4C4;   /* --COLOR-LIGHT-GRAY */
+  --color-gray-11:        #CACACA;   /* --COLOR-CA */
+  --color-gray-12:        #D3D3D3;   /* --COLOR-D3 */
+  --color-gray-13:        #DEDEDE;   /* --COLOR-DE */
+  --color-gray-14:        #E5E5E5;   /* --COLOR-E5 */
+  --color-gray-15:        #EBEBEB;   /* --COLOR-EB */
+  --color-gray-16:        #F4F4F4;   /* --COLOR-F4 light bg */
+  --color-warm-gray:      #E6DFD4;   /* --COLOR-DARK-GRAY (misnamed — warm cream) */
+  --color-cream:          #FCF4E8;   /* Warm page bg / hero tint */
+
+  /* ── SEMANTIC COLORS ──────────────────────────────────── */
+  --color-success:        #469B49;
+  --color-success-bg:     #E6FEEB;
+  --color-error:          #BA3E38;
+  --color-error-bg:       #FDF1F1;
+  --color-offer-text:     #027D15;
+
+  /* ── SALE / BADGE ─────────────────────────────────────── */
+  --color-badge-sale-bg:  #E5004B;
+  --color-badge-sale-text:#FFFFFF;
+  --color-badge-sold-bg:  #000000;
+  --color-badge-sold-text:#FFFFFF;
+
+  /* ── TEXT COLORS ──────────────────────────────────────── */
+  --color-text-primary:   #000000;
+  --color-text-secondary: #042436;   /* nav / icon text */
+  --color-text-muted:     #6C6C6C;
+  --color-text-light:     #9E9E9E;
+  --color-text-white:     #FFFFFF;
+  --color-text-link:      #042436;
+  --color-text-price:     #000000;
+  --color-text-price-orig:#6C6C6C;   /* struck-through original price */
+  --color-text-error:     #BA3E38;
+  --color-text-success:   #469B49;
+
+  /* ── TYPOGRAPHY ───────────────────────────────────────── */
+
+  /* Families */
+  --font-heading:         'Montserrat', sans-serif;
+  --font-body:            'Montserrat', sans-serif;
+  --font-button:          'Montserrat', sans-serif;
+
+  /* Weights */
+  --font-weight-regular:  400;
+  --font-weight-medium:   500;
+  --font-weight-semibold: 600;
+  --font-weight-bold:     700;
+
+  /* -- Heading scale (Montserrat) */
+  --text-h1:              24px;   /* Product title, hero heading */
+  --text-h1-lh:           1.3;
+  --text-h1-weight:       500;
+
+  --text-h2:              32px;   /* Section headings */
+  --text-h2-lh:           1.3;
+  --text-h2-weight:       400;
+
+  --text-h3:              32px;   /* Sub-section headings */
+  --text-h3-lh:           1.3;
+  --text-h3-weight:       500;
+
+  --text-h4:              13px;   /* Label-style small headings */
+  --text-h4-lh:           2.0;
+  --text-h4-weight:       500;
+
+  /* -- Body scale (Montserrat) */
+  --text-body:            13px;
+  --text-body-lh:         1.615;  /* 21px at 13px base */
+  --text-body-weight:     500;
+
+  --text-sm:              12px;
+  --text-sm-lh:           1.4;
+
+  --text-xs:              11px;
+  --text-xs-lh:           1.4;
+
+  --text-base:            16px;   /* Spans, labels, nav links */
+  --text-base-lh:         1.15;
+
+  --text-md:              18px;
+  --text-lg:              20px;
+  --text-xl:              24px;
+  --text-2xl:             30px;
+  --text-3xl:             40px;
+
+  /* Nav link */
+  --text-nav:             24px;
+  --text-nav-weight:      500;
+  --text-nav-family:      'Montserrat', sans-serif;
+
+  /* Button */
+  --text-btn:             16px;
+  --text-btn-weight:      400;
+  --text-btn-transform:   uppercase;
+
+  /* Small button / Shop Now */
+  --text-btn-sm:          13px;
+  --text-btn-sm-weight:   500;
+
+  /* Price */
+  --text-price:           14px;
+  --text-price-weight:    400;
+
+  /* Announcement bar */
+  --text-announcement:    16px;
+  --text-announcement-weight: 500;
+
+  /* ── BORDER RADIUS ────────────────────────────────────── */
+  --radius-xs:            4px;    /* Product image, small badges */
+  --radius-sm:            5px;    /* Shop Now button */
+  --radius-md:            8px;    /* Buttons, inputs, cards */
+  --radius-lg:            12px;
+  --radius-xl:            16px;
+  --radius-full:          50%;    /* Circle icon buttons */
+  --radius-pill:          100px;
+
+  /* -- Theme aliases */
+  --button-border-radius: 8px;
+  --input-border-radius:  8px;
+  --block-border-radius:  8px;
+  --menu-drawer-radius:   0px;
+
+  /* ── SPACING SCALE ────────────────────────────────────── */
+  --space-1:    4px;
+  --space-2:    8px;
+  --space-3:    12px;
+  --space-4:    16px;
+  --space-5:    20px;
+  --space-6:    24px;
+  --space-7:    28px;
+  --space-8:    32px;
+  --space-9:    36px;
+  --space-10:   40px;
+  --space-11:   44px;
+  --space-12:   48px;
+  --space-13:   52px;
+  --space-14:   56px;
+  --space-16:   64px;
+
+  /* ── LAYOUT SPACINGS (from audit) ────────────────────── */
+
+  /* Container horizontal padding */
+  --container-px:         15px;   /* .container left/right padding */
+  --container-max-width:  1340px; /* theme max-width */
+
+  /* Section vertical rhythm */
+  --section-py:           36px;   /* .shopify-block top/bottom */
+  --section-py-lg:        52px;   /* .product_collection / .collection */
+  --section-py-sm:        5px;    /* .shopify-section */
+
+  /* Product collection top padding */
+  --collection-pt:        20px;
+
+  /* LookBook section */
+  --lookbook-pt:          48px;
+  --lookbook-pb:          36px;
+
+  /* Gallery section */
+  --gallery-pt:           32px;
+  --gallery-pb:           48px;
+
+  /* Footer top padding */
+  --footer-pt:            36px;
+
+  /* ── COMPONENT SPACINGS ───────────────────────────────── */
+
+  /* Button padding */
+  --btn-px:               20px;
+  --btn-py:               10px;
+
+  /* Button sm padding */
+  --btn-sm-px:            14px;
+  --btn-sm-py:            8px;
+
+  /* Input/form padding */
+  --input-px:             24px;
+  --input-py:             16px;
+
+  /* Signup input */
+  --signup-px:            20px;
+  --signup-py:            11px;
+
+  /* Cart drawer / recommendation wrapper */
+  --drawer-p:             24px;
+  --recommendation-pr:    21px;
+  --recommendation-pb:    21px;
+
+  /* Reelfy (Watch & Shop) card */
+  --reelfy-pt:            40px;
+  --reelfy-px:            10px;
+  --reelfy-pb:            10px;
+
+  /* Swiper / carousel horizontal padding */
+  --swiper-px:            15px;
+  --swiper-tabs-pr:       20px;
+
+  /* Before/After section */
+  --before-after-py:      36px;
+
+  /* ── BORDERS ──────────────────────────────────────────── */
+  --border-color:         #E5E5E5;
+  --border-width:         1px;
+  --border-default:       1px solid #E5E5E5;
+  --border-focus:         1px solid #042436;
+
+  /* ── SHADOWS ──────────────────────────────────────────── */
+  --shadow-sm:            0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md:            0 4px 12px rgba(0,0,0,0.10);
+  --shadow-lg:            0 8px 24px rgba(0,0,0,0.12);
+
+  /* ── TRANSITIONS ──────────────────────────────────────── */
+  --transition-fast:      0.15s ease;
+  --transition-base:      0.25s ease;
+  --transition-slow:      0.40s ease;
+
+  /* ── Z-INDEX ──────────────────────────────────────────── */
+  --z-base:       1;
+  --z-dropdown:   100;
+  --z-sticky:     200;
+  --z-header:     300;
+  --z-drawer:     400;
+  --z-modal:      500;
+  --z-toast:      600;
+
+  /* ── REVIEW / RATINGS (Judgeme) ───────────────────────── */
+  --color-star:           #E5004B;
+  --color-star-bg:        rgba(229, 0, 75, 0.10);
+  --color-review-name:    #E5004B;
+  --review-border-radius: 0px;
+
+}

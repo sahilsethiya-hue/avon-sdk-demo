@@ -1,0 +1,79 @@
+/* ============================================================
+   AVON INDIA — BASE RESET + GLOBAL STYLES
+   ============================================================ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  line-height: 1.15;
+  -webkit-text-size-adjust: 100%;
+  font-size: 16px;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--text-body-lh);
+  color: var(--color-text-primary);
+  background-color: var(--color-white);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+h1 { font-size: var(--text-h1); line-height: var(--text-h1-lh); font-weight: var(--text-h1-weight); }
+h2 { font-size: var(--text-h2); line-height: var(--text-h2-lh); font-weight: var(--text-h2-weight); }
+h3 { font-size: var(--text-h3); line-height: var(--text-h3-lh); font-weight: var(--text-h3-weight); }
+h4 { font-size: var(--text-h4); line-height: var(--text-h4-lh); font-weight: var(--text-h4-weight); }
+
+p {
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: var(--text-body-lh);
+  color: var(--color-text-primary);
+}
+
+a {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-text-link);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover { color: var(--color-primary); }
+
+small {
+  font-size: var(--text-sm);
+  line-height: 1.4;
+}
+
+img, video {
+  display: block;
+  max-width: 100%;
+}
+
+button {
+  font-family: var(--font-button);
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+input, select, textarea {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  outline: none;
+}
+
+ul, ol { list-style: none; }

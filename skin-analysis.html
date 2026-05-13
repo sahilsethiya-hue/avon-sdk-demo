@@ -1,0 +1,3244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>Avon — AI Skin Analysis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --red:      #E5004B;
+    --red-hov:  #c40040;
+    --orange:   #F97316;
+    --green:    #16A34A;
+    --amber:    #EAB308;
+    --dark:     #0A0A0A;
+    --ink:      #111111;
+    --ink-2:    #555555;
+    --ink-3:    #999999;
+    --border:   #EBEBEB;
+    --surface:  #F7F6F3;
+    --white:    #FFFFFF;
+    --fh: 'Montserrat', sans-serif;
+    --fb: 'Montserrat', sans-serif;
+    --r:  14px;
+    --rsm: 10px;
+    --rpill: 100px;
+    --sdk-header-h: 58px;
+  }
+
+  html, body { height: 100%; }
+  body {
+    font-family: var(--fb);
+    background: #E8E4DE;
+    min-height: 100dvh;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+  body.cam-mode {
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  /* ── SDK HEADER ── */
+  .sdk-header {
+    height: var(--sdk-header-h);
+    background: rgba(255,255,255,.9);
+    border-bottom: 1px solid var(--border);
+    padding: 0 18px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    gap: 12px;
+  }
+  body.cam-mode .sdk-header { display: none; }
+  .sdk-back {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 600; color: var(--ink);
+    background: none; border: none; cursor: pointer; font-family: var(--fb);
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .sdk-back:hover { color: var(--red); }
+  .sdk-logo {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--fh); font-size: 20px; font-weight: 600; color: var(--red);
+    text-decoration: none; letter-spacing: .11em; text-transform: uppercase;
+    flex: 0 0 auto;
+  }
+  .sdk-label {
+    font-size: 11px; font-weight: 600; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--ink-3); white-space: nowrap;
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    text-align: right;
+    text-overflow: ellipsis;
+  }
+  .sdk-spacer {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  /* ── APP WRAP ── */
+  .app-wrap {
+    display: flex; justify-content: center;
+    min-height: 100dvh;
+    padding-bottom: 32px;
+  }
+  body.cam-mode .app-wrap { padding: 0; min-height: 100dvh; }
+
+  .app {
+    width: 100%; max-width: 430px;
+    background: var(--white);
+    min-height: 100dvh;
+    position: relative; overflow: hidden;
+  }
+  /* Camera mode: only change height, never expand beyond 430px */
+  body.cam-mode .app { height: 100dvh; min-height: 100dvh; overflow: hidden; }
+
+  /* ── SCREEN SYSTEM ── */
+  .screen {
+    display: none; flex-direction: column;
+    min-height: calc(100dvh - var(--sdk-header-h));
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  .screen.active {
+    display: flex;
+    height: calc(100dvh - var(--sdk-header-h));
+    min-height: 0;
+  }
+  body.cam-mode #s2,
+  body.cam-mode .screen.active {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .screen.slide-in,
+  .screen.slide-out {
+    position: absolute; top: var(--sdk-header-h); left: 0; right: 0;
+    min-height: 100%; display: flex;
+  }
+  body.cam-mode .screen.slide-in,
+  body.cam-mode .screen.slide-out { top: 0; }
+  .screen.slide-in  { animation: slideIn  .3s cubic-bezier(.4,0,.2,1) forwards; }
+  .screen.slide-out { animation: slideOut .3s cubic-bezier(.4,0,.2,1) forwards; }
+  .screen.slide-in.back  { animation-name: slideInB; }
+  .screen.slide-out.back { animation-name: slideOutB; }
+  @keyframes slideIn  { from { transform: translateX(100%); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes slideOut { from { transform: none; opacity: 1; } to { transform: translateX(-100%); opacity: 0; } }
+  @keyframes slideInB { from { transform: translateX(-100%); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes slideOutB{ from { transform: none; opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+
+
+  /* ══════════════════════════════════════
+     S1 — LANDING
+  ══════════════════════════════════════ */
+  .s1-hero {
+    background: linear-gradient(148deg, #0C1A24 0%, #1A2E3E 55%, #070D14 100%);
+    padding: 36px 24px 32px; position: relative; overflow: hidden; text-align: center;
+  }
+  .s1-hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 55% at 50% 110%, rgba(229,0,75,.22) 0%, transparent 70%);
+  }
+  .s1-hero__inner { position: relative; z-index: 1; }
+  .s1-face-wrap { width: 130px; height: 130px; margin: 0 auto 22px; }
+  .s1-eyebrow {
+    font-size: 10px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase;
+    color: rgba(255,255,255,.38); margin-bottom: 8px;
+  }
+  .s1-title {
+    font-family: var(--fh); font-size: 34px; font-weight: 600; color: #fff;
+    line-height: 1.08; letter-spacing: 0; margin-bottom: 10px;
+  }
+  .s1-title em { font-style: normal; color: var(--red); }
+  .s1-sub {
+    font-size: 13px; color: rgba(255,255,255,.5); line-height: 1.65;
+    margin-bottom: 28px; max-width: 280px; margin-left: auto; margin-right: auto;
+  }
+  .s1-cta {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; background: var(--red); color: #fff;
+    font-size: 14px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+    padding: 15px 32px; border-radius: var(--rpill);
+    border: none; cursor: pointer; transition: background .15s; font-family: var(--fb);
+  }
+  .s1-cta:hover { background: var(--red-hov); }
+  .s1-trust {
+    display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 16px;
+  }
+  .s1-trust-item {
+    font-size: 11px; font-weight: 600; color: rgba(255,255,255,.35);
+    display: flex; align-items: center; gap: 4px;
+  }
+
+  .s1-section { padding: 28px 20px 0; }
+  .s1-section-label {
+    font-family: var(--fh); font-size: 11px; font-weight: 600; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--ink-3); margin-bottom: 14px;
+  }
+  .s1-tags {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin-bottom: 28px;
+  }
+  .s1-tag {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 42px;
+    padding: 0 18px;
+    border: 1px solid var(--border);
+    border-radius: var(--rpill);
+    background: var(--white);
+    color: var(--premium-plum, var(--ink));
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .s1-tag.more {
+    border-color: #6C3F2D;
+    background: #6C3F2D;
+    color: #fff;
+  }
+
+  .s1-how { padding: 0 20px 32px; }
+  .s1-steps { display: flex; flex-direction: column; gap: 16px; }
+  .s1-step { display: flex; align-items: flex-start; gap: 14px; }
+  .s1-step-num {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--red); color: #fff;
+    font-family: var(--fh); font-size: 13px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .s1-step-title { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+  .s1-step-desc  { font-size: 12px; color: var(--ink-3); line-height: 1.5; }
+
+  /* ══════════════════════════════════════
+     S2 — CAMERA (Full-screen modern scan)
+  ══════════════════════════════════════ */
+  .s2-wrap {
+    flex: 1; position: relative; background: #000;
+    display: flex; flex-direction: column; min-height: 100%; overflow: hidden;
+  }
+  .s2-video {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; transform: scaleX(-1); opacity: 0; transition: opacity .5s;
+  }
+  .s2-video.ready { opacity: 1; }
+  .s2-preview {
+    position: absolute; inset: 0; z-index: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    opacity: 0; pointer-events: none;
+    transition: opacity .25s;
+  }
+  .s2-wrap.previewing .s2-preview { opacity: 1; }
+  .s2-wrap.previewing .s2-video { opacity: 0; }
+
+  .s2-grad-top {
+    position: absolute; top: 0; left: 0; right: 0; height: 32%; z-index: 1;
+    background: linear-gradient(to bottom, rgba(0,0,0,.72) 0%, transparent 100%);
+    pointer-events: none;
+  }
+  .s2-grad-bot {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 42%; z-index: 1;
+    background: linear-gradient(to top, rgba(0,0,0,.88) 0%, transparent 100%);
+    pointer-events: none;
+  }
+
+  /* Camera header */
+  .s2-cam-hdr {
+    position: relative; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px;
+    padding-top: calc(16px + env(safe-area-inset-top, 0px));
+  }
+  .s2-cam-btn {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,.12); color: rgba(255,255,255,.9); border: none;
+    border-radius: var(--rpill); padding: 8px 14px;
+    font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--fb);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  }
+  .s2-cam-logo { font-family: var(--fh); font-size: 18px; font-weight: 600; color: #fff; }
+
+  /* Oval + scanning overlay */
+  .s2-oval-wrap {
+    flex: 1; position: relative; z-index: 2;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .s2-oval {
+    width: min(58vw, 220px); height: min(78vw, 296px);
+    border: 2px solid rgba(255,255,255,.3); border-radius: 50%;
+    position: relative; transition: border-color .5s;
+  }
+  .s2-oval.detecting {
+    border-color: rgba(249,115,22,.85);
+  }
+  .s2-oval.detected {
+    border-color: rgba(34,197,94,.95); animation: none;
+  }
+
+  /* Corner brackets */
+  .s2-corner {
+    position: absolute; width: 22px; height: 22px;
+    border-color: rgba(255,255,255,.75); border-style: solid; border-width: 0;
+    transition: border-color .5s;
+  }
+  .s2-oval.detecting .s2-corner { border-color: rgba(249,115,22,.9); }
+  .s2-oval.detected  .s2-corner { border-color: rgba(34,197,94,.9); }
+  .s2-corner.tl { top:-2px; left:-2px; border-top-width:3px; border-left-width:3px; border-radius:5px 0 0 0; }
+  .s2-corner.tr { top:-2px; right:-2px; border-top-width:3px; border-right-width:3px; border-radius:0 5px 0 0; }
+  .s2-corner.bl { bottom:-2px; left:-2px; border-bottom-width:3px; border-left-width:3px; border-radius:0 0 0 5px; }
+  .s2-corner.br { bottom:-2px; right:-2px; border-bottom-width:3px; border-right-width:3px; border-radius:0 0 5px 0; }
+
+  /* Scan line */
+  .s2-scan-line {
+    position: absolute; left: 6%; right: 6%; height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(229,0,75,.95), transparent);
+    filter: blur(.5px);
+    animation: camScan 2.2s ease-in-out infinite; opacity: 0;
+  }
+  .s2-oval.active .s2-scan-line,
+  .s2-oval.detecting .s2-scan-line { opacity: 1; }
+  .s2-oval.detected .s2-scan-line  { opacity: 0; }
+  @keyframes camScan {
+    0%   { top: 8%; opacity: 0; }
+    8%   { opacity: 1; }
+    92%  { opacity: 1; }
+    100% { top: 92%; opacity: 0; }
+  }
+
+  /* Face mesh landmark dots */
+  .s2-dot {
+    position: absolute; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--red); opacity: 0; transform: translate(-50%,-50%);
+    transition: opacity .4s;
+  }
+  .s2-oval.detected .s2-dot {
+    opacity: 1; animation: dotPulse 2.2s ease-in-out infinite;
+  }
+  @keyframes dotPulse {
+    0%,100% { transform: translate(-50%,-50%) scale(1); opacity: .75; }
+    50%      { transform: translate(-50%,-50%) scale(1.7); opacity: .3; }
+  }
+  .s2-dot:nth-child(odd) { animation-delay: .4s; }
+
+  /* Grid lines inside oval */
+  .s2-grid {
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(rgba(229,0,75,.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(229,0,75,.06) 1px, transparent 1px);
+    background-size: 30px 30px;
+    border-radius: 50%; opacity: 0; transition: opacity .4s;
+  }
+  .s2-oval.detecting .s2-grid,
+  .s2-oval.detected  .s2-grid { opacity: 1; }
+
+  /* Status badge */
+  .s2-status-wrap {
+    position: relative; z-index: 2; text-align: center; padding: 0 20px 6px;
+  }
+  .s2-status {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(0,0,0,.45); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    color: rgba(255,255,255,.85); font-size: 13px; font-weight: 600;
+    border-radius: var(--rpill); padding: 9px 18px;
+    border: 1px solid rgba(255,255,255,.08);
+    transition: color .3s;
+  }
+  .s2-status-dot {
+    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    background: var(--ink-3); transition: background .3s;
+  }
+  .s2-status.positioning .s2-status-dot { background: rgba(255,255,255,.4); animation: blink 1.5s infinite; }
+  .s2-status.scanning    .s2-status-dot { background: var(--amber); animation: blink .9s infinite; }
+  .s2-status.detected    .s2-status-dot { background: var(--green); animation: none; }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: .15; } }
+
+  /* Bottom camera controls */
+  .s2-bottom {
+    position: relative; z-index: 10;
+    padding: 12px 24px calc(32px + env(safe-area-inset-bottom, 0px));
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+  }
+  .s2-capture-row {
+    position: relative; width: 100%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .s2-capture-btn {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: rgba(255,255,255,.95);
+    border: 4px solid rgba(255,255,255,.25);
+    cursor: pointer; transition: transform .12s;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .s2-capture-btn:active { transform: scale(.88); }
+  .s2-capture-btn-inner {
+    width: 58px; height: 58px; border-radius: 50%; background: var(--red);
+    transition: background .15s;
+  }
+  .s2-capture-btn:hover .s2-capture-btn-inner { background: var(--red-hov); }
+  .s2-consent {
+    font-size: 10px; color: rgba(255,255,255,.28); text-align: center; line-height: 1.5;
+  }
+  .s2-consent a { color: rgba(255,255,255,.45); }
+
+  .s2-wrap.previewing .s2-guidance,
+  .s2-wrap.previewing .s2-oval-wrap,
+  .s2-wrap.previewing .s2-capture-row,
+  .s2-wrap.previewing .s2-consent {
+    display: none;
+  }
+  .s2-wrap.previewing .s2-status-wrap {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(86px + env(safe-area-inset-bottom, 0px));
+    z-index: 12;
+    padding: 0 20px;
+  }
+  .s2-wrap.previewing .s2-status {
+    color: rgba(255,255,255,.92);
+  }
+  .s2-wrap.previewing .s2-status-dot {
+    background: var(--green);
+    animation: none;
+  }
+  .s2-preview-actions {
+    display: none;
+    width: 100%;
+  }
+  .s2-wrap.previewing .s2-preview-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .s2-wrap.previewing .s2-bottom {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 0 24px calc(18px + env(safe-area-inset-bottom, 0px));
+  }
+  .s2-continue-btn {
+    width: 100%; background: var(--red); color: #fff; border: none;
+    border-radius: 22px; padding: 17px 15px;
+    font-size: 14px; font-weight: 600; cursor: pointer; font-family: var(--fb);
+    letter-spacing: .04em; text-transform: uppercase; transition: background .15s;
+  }
+  .s2-continue-btn:hover { background: var(--red-hov); }
+  .s2-retake-btn {
+    width: 100%;
+    background: rgba(255,255,255,.96);
+    color: var(--ink);
+    border: 1.5px solid rgba(21,18,23,.12);
+    border-radius: 22px;
+    padding: 17px 15px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--fb);
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    transition: border-color .15s, color .15s, background .15s;
+  }
+  .s2-retake-btn:hover {
+    border-color: rgba(229,0,75,.28);
+    color: var(--red);
+  }
+
+
+  /* ══════════════════════════════════════
+     S3 — QUIZ (Info + Skin Questions)
+  ══════════════════════════════════════ */
+  .s3-top {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+  }
+  .s3-back {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 600; color: var(--ink);
+    background: none; border: none; cursor: pointer; font-family: var(--fb);
+  }
+  .s3-back:hover { color: var(--red); }
+  .s3-step-lbl {
+    font-size: 12px; font-weight: 600; color: var(--ink-3);
+    letter-spacing: .06em; text-transform: uppercase;
+  }
+  .s3-progress { display: flex; gap: 4px; padding: 14px 20px 0; }
+  .s3-progress:empty { display: none; }
+  .s3-bar { height: 3px; flex: 1; border-radius: 100px; background: var(--border); transition: background .3s; }
+  .s3-bar.done   { background: var(--red); }
+  .s3-bar.active { background: var(--red); opacity: .45; }
+
+  .s3-body { padding: 24px 20px; flex: 1; }
+  .s3-section {
+    font-size: 10px; font-weight: 600; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--red); margin-bottom: 8px;
+  }
+  .s3-q {
+    font-family: var(--fh); font-size: 22px; font-weight: 600; color: var(--ink);
+    line-height: 1.25; margin-bottom: 6px;
+  }
+  .s3-reason { font-size: 12px; color: var(--ink-3); margin-bottom: 24px; line-height: 1.5; }
+
+  /* Choice options */
+  .s3-opts { display: flex; flex-direction: column; gap: 10px; }
+  .s3-opt {
+    background: var(--surface); border: 1.5px solid transparent;
+    border-radius: var(--r); padding: 15px 16px; cursor: pointer; transition: all .2s;
+  }
+  .s3-opt:hover { border-color: rgba(229,0,75,.25); background: #fff5f8; }
+  .s3-opt.sel   { border-color: var(--red); background: #fff0f4; }
+  .s3-opt-main  { font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+  .s3-opt-sub   { font-size: 12px; color: var(--ink-3); }
+
+  /* Info step (name + mobile number) */
+  .s3-field { margin-bottom: 16px; }
+  .s3-field-lbl {
+    font-size: 12px; font-weight: 600; color: var(--ink);
+    letter-spacing: .02em; display: block; margin-bottom: 8px;
+  }
+  .s3-field-input {
+    width: 100%; padding: 14px 16px;
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: var(--rsm); font-family: var(--fb);
+    font-size: 15px; color: var(--ink); outline: none; transition: border-color .2s;
+  }
+  .s3-field-input:focus { border-color: var(--red); background: var(--white); }
+  .s3-field-input::placeholder { color: var(--ink-3); }
+  .s3-continue {
+    width: 100%; background: var(--red); color: #fff; border: none;
+    border-radius: var(--rpill); padding: 15px;
+    font-size: 14px; font-weight: 600; cursor: pointer; font-family: var(--fb);
+    letter-spacing: .04em; text-transform: uppercase; margin-top: 28px;
+    transition: background .15s; display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .s3-continue:hover { background: var(--red-hov); }
+
+
+  /* ══════════════════════════════════════
+     S4 — ANALYZING
+  ══════════════════════════════════════ */
+  .s4-wrap {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 40px 28px;
+    background: linear-gradient(160deg, var(--white) 0%, #FEF3F6 100%);
+  }
+  .s4-ring-wrap { position: relative; width: 112px; height: 112px; margin-bottom: 28px; }
+  .s4-ring {
+    width: 112px; height: 112px; border-radius: 50%;
+    border: 3px solid #f0e0e5; border-top-color: var(--red);
+    animation: spin 1.1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .s4-ring-inner {
+    position: absolute; inset: 12px; border-radius: 50%;
+    border: 2px solid #fde0e8; border-bottom-color: var(--red); opacity: .5;
+    animation: spin 2s linear infinite reverse;
+  }
+  .s4-pct {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-family: var(--fh); font-size: 20px; font-weight: 600; color: var(--red);
+  }
+  .s4-title {
+    font-family: var(--fh); font-size: 22px; font-weight: 600; color: var(--ink);
+    margin-bottom: 6px; text-align: center;
+  }
+  .s4-sub { font-size: 13px; color: var(--ink-3); text-align: center; margin-bottom: 28px; }
+  .s4-steps { width: 100%; max-width: 300px; margin-bottom: 32px; }
+  .s4-step {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 0; opacity: .3; transition: opacity .4s;
+  }
+  .s4-step.on   { opacity: 1; }
+  .s4-step.done { opacity: .82; }
+  .s4-step-icon {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--surface); display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0; transition: background .3s;
+  }
+  .s4-step.on   .s4-step-icon { background: #151217; color: #fff; }
+  .s4-step.done .s4-step-icon { background: #151217; color: #fff; }
+  .s4-step-text { font-size: 13px; font-weight: 600; color: var(--ink); }
+  .s4-fact {
+    background: var(--surface); border-radius: var(--r);
+    padding: 16px; max-width: 320px; text-align: center;
+  }
+  .s4-fact-label {
+    font-size: 10px; font-weight: 600; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--red); margin-bottom: 6px;
+  }
+  .s4-fact-text { font-size: 12px; color: var(--ink-2); line-height: 1.6; }
+
+
+  /* ══════════════════════════════════════
+     S5 — RESULTS (Reference-style redesign)
+  ══════════════════════════════════════ */
+  .s5-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--white);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .s5-hdr-back {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 600; color: var(--ink);
+    background: none; border: none; cursor: pointer; font-family: var(--fb);
+  }
+  .s5-hdr-back:hover { color: var(--red); }
+  .s5-hdr-title { font-family: var(--fh); font-size: 17px; font-weight: 600; color: var(--ink); }
+  .s5-hdr-loc {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 12px; font-weight: 600; color: var(--ink-2);
+  }
+
+  .s5-body { padding: 16px; flex: 1; overflow-y: auto; }
+
+  /* Score Card */
+  .s5-score-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 20px; margin-bottom: 14px;
+  }
+  .s5-score-row { display: flex; align-items: center; gap: 18px; }
+  .score-ring-wrap { position: relative; flex-shrink: 0; }
+  .score-ring-inner {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .score-num {
+    font-family: var(--fh); font-size: 30px; font-weight: 600; color: var(--ink); line-height: 1;
+  }
+  .score-total { font-size: 12px; color: var(--ink-3); }
+  .s5-score-info { flex: 1; }
+  .s5-score-lbl {
+    font-size: 10px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--ink-3); margin-bottom: 4px;
+  }
+  .s5-score-verdict {
+    font-family: var(--fh); font-size: 20px; font-weight: 600; color: var(--ink); margin-bottom: 10px;
+  }
+  .s5-skin-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .s5-skin-tag {
+    font-size: 12px; font-weight: 600; color: var(--ink-2);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--rpill); padding: 5px 12px;
+  }
+
+  /* Concern Map */
+  .s5-section-title {
+    font-family: var(--fh); font-size: 17px; font-weight: 600; color: var(--ink);
+    margin-bottom: 12px;
+  }
+  .s5-map-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--r); overflow: hidden; margin-bottom: 14px;
+  }
+  .s5-map-body { position: relative; }
+  .s5-map-img {
+    width: 100%; height: 320px; object-fit: cover; object-position: center top; display: block;
+  }
+  /* Concern pins */
+  .cm-pin { position: absolute; display: flex; align-items: center; gap: 5px; }
+  .cm-pin.left  { flex-direction: row; }
+  .cm-pin.right { flex-direction: row-reverse; }
+  .cm-label {
+    display: flex; align-items: center; gap: 5px;
+    border-radius: var(--rpill); padding: 5px 10px;
+    font-size: 11px; font-weight: 600; color: #fff; white-space: nowrap;
+  }
+  .cm-label.red    { background: #E5004B; }
+  .cm-label.orange { background: #F97316; }
+  .cm-label.green  { background: #16A34A; }
+  .cm-score { font-weight: 600; font-size: 10px; opacity: .9; }
+  .cm-line { height: 1px; width: 16px; flex-shrink: 0; }
+  .cm-line.red    { background: rgba(229,0,75,.6); }
+  .cm-line.orange { background: rgba(249,115,22,.6); }
+  .cm-line.green  { background: rgba(22,163,74,.6); }
+  .cm-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .cm-dot.red    { background: #E5004B; }
+  .cm-dot.orange { background: #F97316; }
+  .cm-dot.green  { background: #16A34A; }
+  .s5-map-legend {
+    display: flex; justify-content: center; gap: 16px;
+    padding: 10px 16px 14px; background: var(--surface);
+  }
+  .s5-leg-item { display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 600; color: var(--ink-3); }
+  .s5-leg-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* Concern breakdown cards */
+  .s5-concerns { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .s5-cc {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 16px;
+    border-left: 3px solid transparent;
+  }
+  .s5-cc.red    { border-left-color: #E5004B; }
+  .s5-cc.orange { border-left-color: #F97316; }
+  .s5-cc.green  { border-left-color: #16A34A; }
+  .s5-cc-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .s5-cc-name { font-size: 14px; font-weight: 600; color: var(--ink); }
+  .s5-sev {
+    font-size: 10px; font-weight: 600; letter-spacing: .06em;
+    text-transform: uppercase; padding: 3px 9px; border-radius: var(--rpill);
+  }
+  .s5-sev.red    { background: rgba(229,0,75,.08); color: #E5004B; }
+  .s5-sev.orange { background: rgba(249,115,22,.1); color: #F97316; }
+  .s5-sev.green  { background: rgba(22,163,74,.1); color: #16A34A; }
+  .s5-cc-bar { height: 5px; background: var(--border); border-radius: 100px; margin-bottom: 6px; overflow: hidden; }
+  .s5-cc-fill { height: 100%; border-radius: 100px; transition: width 1.1s ease-out; }
+  .s5-cc-fill.red    { background: #E5004B; }
+  .s5-cc-fill.orange { background: #F97316; }
+  .s5-cc-fill.green  { background: #16A34A; }
+  .s5-cc-score { font-size: 12px; font-weight: 600; color: var(--ink-2); }
+  .s5-cc-insight { font-size: 12px; color: var(--ink-3); line-height: 1.55; margin-top: 8px; }
+
+  /* Routine CTA */
+  .s5-routine-cta {
+    background: var(--dark); border-radius: var(--r);
+    padding: 20px; margin-bottom: 24px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .s5-cta-text { flex: 1; }
+  .s5-cta-title { font-family: var(--fh); font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 3px; }
+  .s5-cta-sub { font-size: 11px; color: rgba(255,255,255,.45); line-height: 1.4; }
+  .s5-cta-btn {
+    background: var(--red); color: #fff; border: none; border-radius: 8px;
+    padding: 10px 14px; cursor: pointer;
+    font-size: 12px; font-weight: 600; font-family: var(--fb);
+    white-space: nowrap; flex-shrink: 0; transition: background .15s;
+  }
+  .s5-cta-btn:hover { background: var(--red-hov); }
+
+
+  /* ══════════════════════════════════════
+     S6 — ROUTINE
+  ══════════════════════════════════════ */
+  .s6-hdr {
+    background: linear-gradient(135deg, var(--red) 0%, #9e0034 100%);
+    padding: 22px 20px 32px; position: relative;
+  }
+  .s6-hdr::after {
+    content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 22px;
+    background: var(--white); border-radius: 22px 22px 0 0;
+  }
+  .s6-back {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 600; color: rgba(255,255,255,.6);
+    background: none; border: none; cursor: pointer; font-family: var(--fb); margin-bottom: 18px;
+  }
+  .s6-back:hover { color: #fff; }
+  .s6-htitle {
+    font-family: var(--fh); font-size: 28px; font-weight: 600; color: #fff;
+    line-height: 1.1; letter-spacing: -.5px; margin-bottom: 4px;
+  }
+  .s6-hsub { font-size: 12px; color: rgba(255,255,255,.6); }
+  .s6-body { padding: 20px 16px 0; }
+  .s6-routine-label {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--ink-3); margin-bottom: 12px; margin-top: 4px;
+  }
+  .s6-pc {
+    display: flex; gap: 14px; background: var(--surface);
+    border-radius: var(--r); padding: 14px; margin-bottom: 10px;
+  }
+  .s6-pc-img {
+    width: 72px; height: 72px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; background: var(--white); border: 1px solid var(--border);
+  }
+  .s6-pc-info { flex: 1; min-width: 0; }
+  .s6-pc-step { font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--red); margin-bottom: 3px; }
+  .s6-pc-name { font-family: var(--fh); font-size: 14px; font-weight: 600; color: var(--ink); line-height: 1.3; margin-bottom: 4px; }
+  .s6-pc-why { font-size: 11px; color: var(--ink-3); line-height: 1.5; margin-bottom: 8px; }
+  .s6-pc-bottom { display: flex; align-items: center; justify-content: space-between; }
+  .s6-pc-price { font-size: 15px; font-weight: 600; color: var(--ink); }
+  .s6-pc-orig  { font-size: 11px; color: var(--ink-3); text-decoration: line-through; margin-left: 4px; }
+  .s6-pc-off   { font-size: 10px; font-weight: 600; color: var(--red); margin-left: 4px; }
+  .s6-add-btn {
+    background: var(--red); color: #fff; border: none; border-radius: 8px;
+    padding: 7px 13px; font-size: 11px; font-weight: 600; cursor: pointer;
+    font-family: var(--fb); transition: background .15s; white-space: nowrap;
+  }
+  .s6-add-btn:hover { background: var(--red-hov); }
+  .s6-add-btn.added { background: var(--green); }
+  .s6-total {
+    background: var(--dark); border-radius: var(--r);
+    padding: 16px 18px; margin: 16px 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .s6-total-lbl { font-size: 13px; font-weight: 600; color: rgba(255,255,255,.5); }
+  .s6-total-val { font-family: var(--fh); font-size: 20px; font-weight: 600; color: #fff; }
+  .s6-shop-btn {
+    width: 100%; background: var(--red); color: #fff; border: none;
+    border-radius: var(--rpill); padding: 15px;
+    font-size: 14px; font-weight: 600; cursor: pointer; font-family: var(--fb);
+    letter-spacing: .04em; text-transform: uppercase; margin-bottom: 10px; transition: background .15s;
+  }
+  .s6-shop-btn:hover { background: var(--red-hov); }
+  .s6-share { text-align: center; padding: 20px 0 36px; }
+  .s6-share-title { font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .s6-share-sub { font-size: 12px; color: var(--ink-3); margin-bottom: 14px; }
+  .s6-share-btns { display: flex; justify-content: center; gap: 12px; margin-bottom: 16px; }
+  .s6-share-btn {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--surface); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    padding: 0;
+    font: inherit;
+    font-size: 18px; cursor: pointer; transition: background .15s, transform .15s;
+    appearance: none;
+  }
+  .s6-share-btn svg {
+    width: 21px;
+    height: 21px;
+    display: block;
+  }
+  .s6-share-btn.whatsapp { color: #25D366; }
+  .s6-share-btn.copy-link { color: var(--ink); }
+  .s6-share-btn.instagram { color: #E1306C; }
+  .s6-share-btn:hover { background: #fde0e8; transform: scale(1.06); }
+  .s6-retake {
+    font-size: 12px; font-weight: 600; color: var(--ink-3);
+    cursor: pointer; background: none; border: none;
+    font-family: var(--fb); text-decoration: underline;
+  }
+  .s6-retake:hover { color: var(--red); }
+
+  /* ── UTILITIES ── */
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+  .toast {
+    position: fixed; bottom: 28px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--dark); color: #fff;
+    font-family: var(--fb); font-size: 13px; font-weight: 600;
+    padding: 10px 20px; border-radius: var(--rpill);
+    opacity: 0; transition: transform .3s, opacity .3s;
+    pointer-events: none; z-index: 999; white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+  /* ══════════════════════════════════════
+     PREMIUM UX REFRESH
+  ══════════════════════════════════════ */
+  :root {
+    --premium-ink: #151217;
+    --premium-soft: #FBF7F4;
+    --premium-warm: #EFE6DE;
+    --premium-sage: #DCE9DF;
+    --premium-plum: #3A1627;
+    --premium-line: rgba(21,18,23,.1);
+  }
+
+  body {
+    background:
+      linear-gradient(135deg, #E9E1D8 0%, #F7F1ED 44%, #DCE9DF 100%);
+    color: var(--premium-ink);
+    overflow-x: hidden;
+  }
+
+  .app-wrap {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .app {
+    background: #FFFCFA;
+    min-width: 0;
+  }
+
+  @media (min-width: 520px) {
+    .app-wrap { padding: 28px 0 40px; }
+    .app {
+      border-radius: 34px;
+      min-height: calc(100dvh - 56px);
+      max-height: calc(100dvh - 56px);
+      overflow-y: auto;
+      scrollbar-width: none;
+    }
+    .app::-webkit-scrollbar { display: none; }
+    .screen { min-height: calc(100dvh - 114px); }
+    .screen.active { height: calc(100dvh - 114px); }
+    .s1-hero { min-height: calc(100dvh - 114px); }
+    body.cam-mode .app {
+      border-radius: 34px;
+      height: calc(100dvh - 56px);
+      min-height: calc(100dvh - 56px);
+      max-height: calc(100dvh - 56px);
+      overflow: hidden;
+    }
+    body.cam-mode .screen.active { height: calc(100dvh - 56px); }
+  }
+
+  .s1-hero {
+    padding: 26px 22px 22px;
+    background:
+      linear-gradient(180deg, rgba(255,252,250,.76), rgba(255,252,250,.9) 58%, rgba(255,252,250,1) 100%),
+      url("Image.png") center top / cover;
+    min-height: 420px;
+    display: flex;
+    align-items: flex-end;
+    text-align: left;
+  }
+
+  .s3-top,
+  .s5-header {
+    display: none;
+  }
+
+  .s6-back {
+    display: none;
+  }
+
+  .s1-hero::before {
+    background:
+      linear-gradient(180deg, rgba(255,252,250,.18) 0%, rgba(255,252,250,.92) 72%, #FFFCFA 100%);
+  }
+
+  .s1-hero__inner {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .s1-face-wrap {
+    display: none;
+  }
+
+  .s1-eyebrow {
+    color: var(--red);
+    margin-bottom: 8px;
+  }
+
+  .s1-title {
+    max-width: none;
+    color: var(--premium-ink);
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 1.08;
+    letter-spacing: 0;
+    margin-bottom: 12px;
+  }
+
+  .s1-title em {
+    color: var(--premium-plum);
+  }
+
+  .s1-sub {
+    max-width: 320px;
+    margin: 0 0 18px;
+    color: rgba(21,18,23,.62);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .s1-cta,
+  .s3-continue,
+  .s2-continue-btn,
+  .s6-shop-btn {
+    min-height: 54px;
+    border-radius: 14px;
+  }
+
+  .s1-trust {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  .s1-trust-item {
+    padding: 6px 9px;
+    border: 1px solid rgba(21,18,23,.08);
+    border-radius: var(--rpill);
+    background: rgba(255,255,255,.74);
+    color: rgba(21,18,23,.58);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .s1-trust-item svg {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2.4;
+  }
+
+  .s1-section {
+    padding: 26px 20px 0;
+  }
+
+  .s1-section-label {
+    color: rgba(21,18,23,.5);
+  }
+
+  .s1-tags {
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .s1-tag {
+    min-height: 42px;
+    border-color: rgba(108,63,45,.18);
+    color: #6C3F2D;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .s1-how {
+    padding: 2px 20px 28px;
+  }
+
+  .s1-step {
+    padding: 12px;
+    border: 1px solid rgba(21,18,23,.06);
+    border-radius: 16px;
+    background: #fff;
+  }
+
+  .s1-step-num {
+    background: var(--premium-plum);
+  }
+
+  .s2-grad-top {
+    background: linear-gradient(to bottom, rgba(0,0,0,.76), transparent 100%);
+  }
+
+  .s2-cam-btn,
+  .s2-status {
+    border: 1px solid rgba(255,255,255,.15);
+    background: rgba(14,12,15,.52);
+  }
+
+  .s2-cam-logo {
+    letter-spacing: .12em;
+  }
+
+  .s2-guidance {
+    position: relative;
+    z-index: 3;
+    width: calc(100% - 40px);
+    margin: -6px auto 0;
+    padding: 12px 14px;
+    border: 1px solid rgba(255,255,255,.13);
+    border-radius: 16px;
+    background: rgba(14,12,15,.42);
+    color: rgba(255,255,255,.82);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  .s2-guidance-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.52);
+  }
+
+  .s2-quality {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: rgba(255,255,255,.86);
+  }
+
+  .s2-quality::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #16A34A;
+  }
+
+  .s2-guidance-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .s2-guidance-item {
+    padding: 8px;
+    border-radius: 11px;
+    background: rgba(255,255,255,.08);
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.35;
+    text-align: center;
+  }
+
+  .s2-oval {
+    border-color: rgba(255,255,255,.42);
+  }
+
+  .s2-capture-btn {
+    width: 84px;
+    height: 84px;
+  }
+
+  .s3-top {
+    background: rgba(255,255,255,.88);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  .s3-progress {
+    gap: 6px;
+    padding: 18px 22px 0;
+  }
+
+  .s3-bar {
+    height: 4px;
+    background: #EFE7E2;
+  }
+
+  .s3-bar.done {
+    background: #3A1627;
+  }
+
+  .s3-bar.active {
+    background: var(--red);
+    opacity: 1;
+  }
+
+  .s3-body {
+    padding: 30px 26px 36px;
+    background:
+      linear-gradient(180deg, #FFFCFA 0%, #FBF7F4 100%);
+  }
+
+  .s3-card {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .s3-section {
+    color: var(--red);
+    margin-bottom: 14px;
+  }
+
+  .s3-q {
+    max-width: 360px;
+    font-size: 30px;
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1.16;
+  }
+
+  .s3-reason {
+    color: rgba(21,18,23,.54);
+    font-size: 13px;
+    font-style: italic;
+    margin-bottom: 30px;
+  }
+
+  .s3-opt {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4px;
+    align-items: center;
+    min-height: 68px;
+    border: 1.5px solid #E5D6CC;
+    border-radius: 18px;
+    background: rgba(255,255,255,.84);
+    padding: 16px 18px;
+  }
+
+  .s3-opt::before {
+    display: none;
+  }
+
+  .s3-opt.sel::before {
+    display: none;
+  }
+
+  .s3-opt.sel::after {
+    display: none;
+  }
+
+  .s3-opt:hover,
+  .s3-opt.sel {
+    background: #fff;
+    border-color: rgba(229,0,75,.48);
+  }
+
+  .s3-opt.sel {
+    background: #FFF0F4;
+  }
+
+  .s3-opt-main {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .s3-opt-sub {
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .s3-field-input {
+    min-height: 56px;
+    border-radius: 14px;
+    background: #FBF7F4;
+  }
+
+  .s3-profile-note {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: #EFF7F1;
+    color: rgba(21,18,23,.62);
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .s4-wrap {
+    background:
+      radial-gradient(circle at 50% 0%, rgba(229,0,75,.06), transparent 34%),
+      linear-gradient(180deg, #FFFCFA 0%, #F7F0EC 100%);
+  }
+
+  .s4-ring-wrap {
+    width: 132px;
+    height: 132px;
+    margin-bottom: 32px;
+  }
+
+  .s4-ring,
+  .s4-ring-inner {
+    width: 132px;
+    height: 132px;
+  }
+
+  .s4-ring-inner {
+    width: auto;
+    height: auto;
+  }
+
+  .s4-title {
+    max-width: 330px;
+    font-size: 25px;
+    line-height: 1.12;
+  }
+
+  .s4-steps {
+    border: 1px solid rgba(21,18,23,.07);
+    border-radius: 24px;
+    background: #fff;
+    padding: 8px 18px;
+  }
+
+  .s4-step {
+    min-height: 58px;
+    border-bottom: 1px solid rgba(21,18,23,.06);
+    opacity: .42;
+  }
+
+  .s4-step:last-child {
+    border-bottom: 0;
+  }
+
+  .s4-step.on {
+    opacity: 1;
+  }
+
+  .s4-step.done {
+    opacity: .86;
+  }
+
+  .s4-step-icon {
+    position: relative;
+    width: 34px;
+    height: 34px;
+    border: 1px solid transparent;
+    color: var(--red);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .s4-step.on .s4-step-icon {
+    background: #151217;
+    color: #fff;
+  }
+
+  .s4-step.done .s4-step-icon {
+    background: #151217;
+    border-color: #151217;
+    color: #fff;
+  }
+
+  .s4-step.done .s4-step-text {
+    color: rgba(21,18,23,.62);
+  }
+
+  .s4-step.on .s4-step-text {
+    color: #151217;
+  }
+
+  .s4-fact {
+    border: 1px solid rgba(21,18,23,.06);
+    background: rgba(255,255,255,.78);
+  }
+
+  .s5-header {
+    background: rgba(255,252,250,.9);
+    border-bottom-color: rgba(21,18,23,.08);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  .s5-hdr-loc {
+    padding: 7px 10px;
+    border-radius: var(--rpill);
+    background: #F5EFEA;
+    color: rgba(21,18,23,.66);
+    font-size: 11px;
+  }
+
+  .s5-body {
+    padding: 18px 16px 24px;
+    background: #FFFCFA;
+  }
+
+  .s5-score-card,
+  .s5-map-card,
+  .s5-cc {
+    border-color: rgba(21,18,23,.07);
+    border-radius: 20px;
+  }
+
+  .s5-score-card {
+    padding: 22px;
+  }
+
+  .s5-score-row { gap: 20px; }
+
+  .s5-map-body {
+    background: #F7EEE8;
+  }
+
+  .s5-map-img {
+    height: 350px;
+    object-position: center 12%;
+  }
+
+  .s5-section-title {
+    margin-top: 20px;
+  }
+
+  .s5-cc {
+    background: #fff;
+    border-left-width: 0;
+    padding: 17px;
+  }
+
+  .s5-cc-top {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .s5-cc-name {
+    font-size: 15px;
+  }
+
+  .s5-cc-insight {
+    color: rgba(21,18,23,.58);
+  }
+
+  .s5-action-plan {
+    margin: 18px 0 16px;
+    padding: 16px;
+    border-radius: 20px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,250,252,.98));
+    border: 1px solid rgba(21,18,23,.08);
+  }
+
+  .s5-action-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .s5-action-kicker {
+    margin-bottom: 4px;
+    color: var(--red);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+  }
+
+  .s5-action-title {
+    font-family: var(--fh);
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--premium-ink);
+    letter-spacing: -.01em;
+    line-height: 1.1;
+  }
+
+  .s5-action-badge {
+    flex: 0 0 auto;
+    border-radius: var(--rpill);
+    background: #F8E8EE;
+    color: var(--red);
+    padding: 7px 10px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  .s5-action-list {
+    display: grid;
+    gap: 0;
+  }
+
+  .s5-action {
+    position: relative;
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 0;
+  }
+
+  .s5-action:not(:last-child) {
+    border-bottom: 1px solid rgba(21,18,23,.07);
+  }
+
+  .s5-action-num {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    place-items: center;
+    border-radius: 50%;
+    background: #FFF0F4;
+    color: var(--red);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .s5-action strong {
+    display: block;
+    color: var(--premium-ink);
+    font-size: 14px;
+    line-height: 1.2;
+  }
+
+  .s5-action span {
+    display: block;
+    margin-top: 4px;
+    color: rgba(21,18,23,.58);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .s5-routine-cta {
+    border-radius: 18px;
+    background:
+      linear-gradient(135deg, #151217, #3A1627);
+  }
+
+  .s5-cta-btn,
+  .s6-add-btn {
+    border-radius: 12px;
+  }
+
+  .s6-hdr {
+    background:
+      linear-gradient(145deg, rgba(58,22,39,.98), rgba(21,18,23,.98));
+    padding-bottom: 36px;
+  }
+
+  .s6-body {
+    background: #FFFCFA;
+  }
+
+  .s6-routine-intro {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .s6-routine-chiprow {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .s6-routine-chiprow span {
+    padding: 7px 10px;
+    border-radius: var(--rpill);
+    background: #F5EFEA;
+    color: rgba(21,18,23,.62);
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .s6-routine-label {
+    margin-top: 18px;
+    color: rgba(21,18,23,.5);
+  }
+
+  .s6-pc {
+    position: relative;
+    border: 1px solid rgba(21,18,23,.07);
+    border-radius: 18px;
+    background: #fff;
+  }
+
+  .s6-pc-img {
+    width: 76px;
+    height: 76px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 6px;
+    border-radius: 16px;
+    border: 1px solid rgba(21,18,23,.08);
+    background: #fff;
+    color: var(--premium-plum);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .s6-pc-img span {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 60px;
+    margin: auto;
+    line-height: 1.15;
+  }
+
+  .s6-pc-img img {
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    border-radius: 12px;
+    background: #fff;
+  }
+
+  .s6-pc-why {
+    color: rgba(21,18,23,.56);
+  }
+
+  .s6-pc-bottom {
+    gap: 10px;
+  }
+
+  .s6-total {
+    position: sticky;
+    bottom: 12px;
+    z-index: 9;
+    border-radius: 18px;
+  }
+
+  .s6-shop-btn {
+    margin-top: 2px;
+  }
+
+  .s6-share {
+    border-top: 1px solid rgba(21,18,23,.08);
+  }
+
+  .s6-share-btn {
+    border-radius: 14px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .05em;
+  }
+
+  .s1-hero {
+    min-height: calc(100dvh - var(--sdk-header-h));
+    padding: 26px 22px calc(26px + env(safe-area-inset-bottom, 0px));
+    background:
+      linear-gradient(180deg, rgba(10,10,10,.1) 0%, rgba(10,10,10,.22) 34%, rgba(10,10,10,.78) 100%),
+      url("Image.png") center / cover;
+    display: flex;
+    align-items: flex-end;
+    overflow: hidden;
+    text-align: left;
+  }
+
+  .s1-hero::before {
+    background: linear-gradient(180deg, transparent 0%, rgba(229,0,75,.16) 58%, rgba(21,18,23,.42) 100%);
+  }
+
+  .s1-hero__inner {
+    width: 100%;
+    display: block;
+  }
+
+  .s1-eyebrow {
+    color: rgba(255,255,255,.82);
+    margin-bottom: 10px;
+  }
+
+  .s1-title {
+    max-width: 340px;
+    color: #fff;
+    font-size: 36px;
+    font-weight: 600;
+    line-height: 1.08;
+    letter-spacing: 0;
+    margin-bottom: 14px;
+  }
+
+  .s1-sub {
+    max-width: 330px;
+    margin: 0 0 22px;
+    color: rgba(255,255,255,.78);
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .s1-cta {
+    min-height: 58px;
+    border-radius: var(--rpill);
+  }
+
+  .s1-step-strip {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .s1-mini-step {
+    min-height: 76px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: 18px;
+    background: rgba(255,255,255,.14);
+    color: #fff;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  .s1-mini-step svg {
+    width: 18px;
+    height: 18px;
+    stroke-width: 2.4;
+  }
+
+  .s1-mini-step span {
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.1;
+    text-align: center;
+  }
+
+  .s3-top,
+  .s5-header,
+  .s6-back {
+    display: none;
+  }
+
+  .app:has(#s1.active) {
+    overflow: hidden;
+  }
+
+  body:has(#s1.active) {
+    overflow: hidden;
+  }
+
+  .app-wrap:has(#s1.active) {
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  #s1 {
+    height: calc(100dvh - var(--sdk-header-h));
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  #s1 .s1-hero {
+    height: 100%;
+    min-height: 0;
+  }
+
+  @media (min-width: 520px) {
+    .app-wrap:has(#s1.active) {
+      padding: 28px 0;
+    }
+    #s1 {
+      height: calc(100dvh - 114px);
+    }
+  }
+
+  @media (max-height: 760px) {
+    #s1 .s1-hero {
+      padding: 18px 22px calc(16px + env(safe-area-inset-bottom, 0px));
+    }
+    .s1-eyebrow {
+      margin-bottom: 7px;
+    }
+    .s1-title {
+      max-width: 310px;
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+    .s1-sub {
+      margin-bottom: 14px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .s1-cta {
+      min-height: 52px;
+    }
+    .s1-step-strip {
+      margin-top: 10px;
+    }
+    .s1-mini-step {
+      min-height: 62px;
+      border-radius: 16px;
+    }
+  }
+
+  /* Shared UI polish for the Avon analysis SDK */
+  .sdk-header {
+    background: rgba(255,252,250,.94);
+    border-bottom-color: rgba(21,18,23,.08);
+  }
+
+  .sdk-logo {
+    font-size: 21px;
+    letter-spacing: .12em;
+  }
+
+  .sdk-label {
+    color: rgba(21,18,23,.50);
+    font-weight: 600;
+    letter-spacing: .12em;
+  }
+
+  .s1-cta,
+  .s2-continue-btn,
+  .s2-retake-btn,
+  .s3-continue,
+  .s6-shop-btn {
+    min-height: 58px;
+    border-radius: var(--rpill);
+    font-weight: 600;
+    letter-spacing: .02em;
+  }
+
+  .guide-screen {
+    background:
+      linear-gradient(180deg, #FFFCFA 0%, #FBF7F4 100%);
+  }
+
+  .guide-body {
+    display: flex;
+    min-height: 100%;
+    flex-direction: column;
+    padding: 24px 20px calc(28px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .guide-kicker {
+    margin-bottom: 10px;
+    color: var(--red);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+  }
+
+  .guide-title {
+    max-width: 340px;
+    margin: 0 0 8px;
+    color: var(--premium-ink, var(--ink));
+    font-family: var(--fh);
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: 0;
+  }
+
+  .guide-copy {
+    max-width: 340px;
+    margin: 0 0 22px;
+    color: rgba(21,18,23,.58);
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.55;
+  }
+
+  .guide-list {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+
+  .guide-card {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 14px;
+    align-items: center;
+    min-height: 92px;
+    border: 1px solid rgba(21,18,23,.08);
+    border-radius: 18px;
+    background: #fff;
+    padding: 16px;
+  }
+
+  .guide-icon {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    place-items: center;
+    border-radius: 14px;
+    background: #FFF0F4;
+    color: var(--red);
+  }
+
+  .guide-icon svg {
+    width: 21px;
+    height: 21px;
+    stroke-width: 2.3;
+  }
+
+  .guide-card-title {
+    margin-bottom: 4px;
+    color: var(--premium-ink, var(--ink));
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .guide-card-copy {
+    color: rgba(21,18,23,.56);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.45;
+  }
+
+  .guide-actions {
+    display: grid;
+    gap: 10px;
+  }
+
+  .guide-primary {
+    display: inline-flex;
+    min-height: 54px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 0;
+    border-radius: var(--rpill);
+    background: var(--red);
+    color: #fff;
+    font-family: var(--fb);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .02em;
+    cursor: pointer;
+  }
+
+  .guide-secondary {
+    min-height: 46px;
+    border: 1px solid rgba(21,18,23,.10);
+    border-radius: var(--rpill);
+    background: #fff;
+    color: rgba(21,18,23,.70);
+    font-family: var(--fb);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .s2-card,
+  .s3-opt,
+  .s5-score-card,
+  .s5-map-card,
+  .s5-cc,
+  .s5-action-plan,
+  .s6-pc {
+    border-color: rgba(21,18,23,.08);
+  }
+
+  .s5-score-card,
+  .s5-map-card,
+  .s5-cc,
+  .s5-action-plan,
+  .s6-pc,
+  .s6-total,
+  .s5-routine-cta {
+    border-radius: 22px;
+  }
+
+  .s5-section-title,
+  .s5-score-verdict,
+  .s5-action-title,
+  .s6-htitle {
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+
+  .s5-section-title {
+    font-size: 20px;
+  }
+
+  .s5-skin-tag,
+  .s6-routine-chiprow span {
+    border: 1px solid rgba(21,18,23,.08);
+    background: #F5EFEA;
+    font-weight: 600;
+  }
+
+  .s5-routine-cta,
+  .s6-total {
+    border: 1px solid rgba(255,255,255,.08);
+  }
+
+  .s5-cta-btn,
+  .s6-add-btn {
+    min-height: 38px;
+    border-radius: var(--rpill);
+    font-weight: 600;
+  }
+
+  .s2-cam-btn,
+  .s5-cta-btn,
+  .s6-add-btn,
+  .s6-shop-btn {
+    border-radius: var(--rpill);
+  }
+
+  .s6-share-btn {
+    border-radius: 50%;
+  }
+
+  .s5-body,
+  .s6-body {
+    padding-bottom: calc(34px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Refined bottom routine CTA */
+  .s5-body {
+    padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .s5-score-card {
+    padding: 18px;
+    border-radius: 20px;
+  }
+
+  .s5-score-row {
+    gap: 16px;
+  }
+
+  .score-ring-wrap svg {
+    width: 88px;
+    height: 88px;
+  }
+
+  .score-num {
+    font-size: 28px;
+    font-weight: 600;
+  }
+
+  .score-total {
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .s5-score-lbl {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .14em;
+  }
+
+  .s5-score-verdict {
+    margin-bottom: 9px;
+    font-size: 19px;
+    font-weight: 600;
+    line-height: 1.18;
+  }
+
+  .s5-skin-tag {
+    padding: 6px 11px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .s5-section-title {
+    margin: 20px 0 12px;
+    font-size: 19px;
+    font-weight: 600;
+  }
+
+  .cm-label {
+    padding: 6px 10px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+
+  .s5-leg-item {
+    font-size: 10px;
+    font-weight: 600;
+  }
+
+  .s5-routine-cta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+    margin: 22px 0 0;
+    padding: 16px;
+    border: 1px solid rgba(255,255,255,.10);
+    border-radius: 20px;
+    background:
+      radial-gradient(circle at 12% 0%, rgba(229,0,75,.24), transparent 44%),
+      linear-gradient(135deg, #151217 0%, #2b1320 55%, #42152a 100%);
+    overflow: hidden;
+  }
+
+  .s5-cta-text {
+    display: grid;
+    min-width: 0;
+    gap: 5px;
+  }
+
+  .s5-cta-title {
+    margin-bottom: 0;
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0;
+  }
+
+  .s5-cta-sub {
+    max-width: 245px;
+    color: rgba(255,255,255,.62);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.45;
+  }
+
+  .s5-cta-btn {
+    display: inline-flex;
+    min-height: 46px;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 18px;
+    border-radius: var(--rpill);
+    background: var(--red);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1;
+    transition: background .16s ease, transform .16s ease;
+  }
+
+  .s5-cta-btn:hover {
+    background: var(--red-hov);
+    transform: translateY(-1px);
+  }
+
+  /* Softer routine typography */
+  .s6-htitle {
+    font-size: 27px;
+    font-weight: 600;
+    line-height: 1.14;
+    letter-spacing: 0;
+  }
+
+  .s6-hsub {
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.5;
+  }
+
+  .s6-routine-chiprow span {
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .s6-routine-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .12em;
+  }
+
+  .s6-pc-img {
+    font-weight: 600;
+  }
+
+  .s6-pc-step {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .12em;
+  }
+
+  .s6-pc-name {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.28;
+  }
+
+  .s6-pc-why {
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.48;
+  }
+
+  .s6-pc-price {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .s6-pc-off {
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .s6-add-btn {
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .s6-total-lbl {
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .s6-total-val {
+    font-size: 22px;
+    font-weight: 600;
+  }
+
+  .s6-shop-btn {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  @media (max-width: 390px) {
+    .s1-title { font-size: 32px; }
+    .s2-guidance-list { grid-template-columns: 1fr; }
+    .s5-map-img { height: 320px; }
+    .cm-label { font-size: 10px; padding: 5px 8px; }
+    .s6-pc { gap: 10px; }
+    .s6-pc-bottom { align-items: flex-start; flex-direction: column; }
+  }
+
+  @media (max-width: 370px) {
+    .s5-body {
+      padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .s5-routine-cta {
+      grid-template-columns: 1fr;
+    }
+
+    .s5-cta-sub {
+      max-width: none;
+    }
+
+    .s5-cta-btn {
+      width: 100%;
+    }
+  }
+
+  :root button[class],
+  :root button[class] :is(span, strong, small, div) {
+    font-weight: 600;
+  }
+  </style>
+</head>
+<body>
+
+<!-- ── APP ── -->
+<div class="app-wrap">
+<div class="app">
+  <header class="sdk-header" id="sdk-header">
+    <button class="sdk-back" onclick="headerBack()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Back
+    </button>
+    <a href="homepage.html" class="sdk-logo">AVON</a>
+    <span class="sdk-spacer" aria-hidden="true"></span>
+  </header>
+
+  <!-- ══════════════ S1 — LANDING ══════════════ -->
+  <div class="screen active" id="s1">
+
+    <div class="s1-hero">
+      <div class="s1-hero__inner">
+        <div class="s1-eyebrow">AI Skin Analysis</div>
+        <h1 class="s1-title">Understand your skin</h1>
+        <p class="s1-sub">Scan your face and get a clear Avon routine for your top concerns.</p>
+        <button class="s1-cta" onclick="goTo('sGuide')">
+          Scan My Skin
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /s1 -->
+
+  <!-- ══════════════ GUIDE — INSTRUCTIONS ══════════════ -->
+  <div class="screen guide-screen" id="sGuide">
+    <div class="guide-body">
+      <div class="guide-kicker">Before You Scan</div>
+      <h2 class="guide-title">Set up your skin scan</h2>
+      <p class="guide-copy">A clear face photo helps the analysis read tone, texture, hydration, and visible concerns more accurately.</p>
+
+      <div class="guide-list" aria-label="Skin scan instructions">
+        <div class="guide-card">
+          <div class="guide-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01"/><path d="M15 9h.01"/><path d="M4 12a8 8 0 1 0 16 0 8 8 0 0 0-16 0Z"/></svg>
+          </div>
+          <div>
+            <div class="guide-card-title">Go natural</div>
+            <div class="guide-card-copy">Remove make-up, take off glasses, and keep hair away from your face.</div>
+          </div>
+        </div>
+        <div class="guide-card">
+          <div class="guide-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+          </div>
+          <div>
+            <div class="guide-card-title">Find good lighting</div>
+            <div class="guide-card-copy">Use natural light or a well-lit room. Avoid harsh shadows on your skin.</div>
+          </div>
+        </div>
+        <div class="guide-card">
+          <div class="guide-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+          </div>
+          <div>
+            <div class="guide-card-title">Align your face</div>
+            <div class="guide-card-copy">Keep your face inside the outline and look straight at the camera.</div>
+          </div>
+        </div>
+      </div>
+      <div class="guide-actions">
+        <button class="guide-primary" onclick="goTo('s2')">
+          Open Camera
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+  </div><!-- /sGuide -->
+
+
+  <!-- ══════════════ S2 — CAMERA ══════════════ -->
+  <div class="screen" id="s2">
+    <div class="s2-wrap">
+      <!-- Live camera feed -->
+      <video id="s2-video" class="s2-video" autoplay muted playsinline></video>
+      <img id="s2-preview" class="s2-preview" alt="Captured skin scan preview"/>
+
+      <!-- Gradients -->
+      <div class="s2-grad-top"></div>
+      <div class="s2-grad-bot"></div>
+
+      <!-- Camera header -->
+      <div class="s2-cam-hdr">
+        <button class="s2-cam-btn" onclick="goTo('sGuide')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Back
+        </button>
+        <div class="s2-cam-logo">AVON</div>
+        <button class="s2-cam-btn" style="opacity:.7; font-size:11px" aria-label="Secure scan">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+          Secure
+        </button>
+      </div>
+
+      <div class="s2-guidance">
+        <div class="s2-guidance-top">
+          <span>Capture quality</span>
+          <span class="s2-quality">Ready</span>
+        </div>
+        <div class="s2-guidance-list">
+          <div class="s2-guidance-item">Face the light</div>
+          <div class="s2-guidance-item">Remove glasses</div>
+          <div class="s2-guidance-item">Keep skin bare</div>
+        </div>
+      </div>
+
+      <!-- Face oval + scanning overlay -->
+      <div class="s2-oval-wrap">
+        <div class="s2-oval active" id="s2-oval">
+          <div class="s2-grid"></div>
+          <div class="s2-corner tl"></div>
+          <div class="s2-corner tr"></div>
+          <div class="s2-corner bl"></div>
+          <div class="s2-corner br"></div>
+          <div class="s2-scan-line"></div>
+          <!-- Landmark dots (positioned as face anatomy) -->
+          <div class="s2-dot" style="top:28%;left:36%"></div>
+          <div class="s2-dot" style="top:28%;left:64%"></div>
+          <div class="s2-dot" style="top:42%;left:50%"></div>
+          <div class="s2-dot" style="top:52%;left:50%"></div>
+          <div class="s2-dot" style="top:62%;left:38%"></div>
+          <div class="s2-dot" style="top:62%;left:62%"></div>
+          <div class="s2-dot" style="top:74%;left:50%"></div>
+          <div class="s2-dot" style="top:22%;left:28%"></div>
+          <div class="s2-dot" style="top:22%;left:72%"></div>
+        </div>
+      </div>
+
+      <!-- Detection status -->
+      <div class="s2-status-wrap">
+        <div class="s2-status positioning" id="s2-status">
+          <div class="s2-status-dot"></div>
+          <span id="s2-status-text">Centre your face in the oval</span>
+        </div>
+      </div>
+
+      <!-- Bottom controls -->
+      <div class="s2-bottom">
+        <div class="s2-capture-row">
+          <button class="s2-capture-btn" id="s2-capture-btn" onclick="capturePhoto()" aria-label="Capture">
+            <div class="s2-capture-btn-inner"></div>
+          </button>
+        </div>
+
+        <p class="s2-consent">By proceeding, you consent to Avon scanning your image. <a href="#">Privacy Policy</a></p>
+
+        <div class="s2-preview-actions">
+          <button class="s2-retake-btn" onclick="retakePhoto()">Retake</button>
+          <button class="s2-continue-btn" onclick="proceedToAnalysis()">Continue</button>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /s2 -->
+
+
+  <!-- ══════════════ S3 — QUIZ ══════════════ -->
+  <div class="screen" id="s3">
+    <div class="s3-top">
+      <button class="s3-back" id="quiz-back-btn" onclick="quizBack()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Back
+      </button>
+      <span class="s3-step-lbl" id="quiz-step-label">1 of 5</span>
+    </div>
+    <div class="s3-progress" id="quiz-progress"></div>
+    <div class="s3-body" id="quiz-body"></div>
+  </div><!-- /s3 -->
+
+
+  <!-- ══════════════ S4 — ANALYZING ══════════════ -->
+  <div class="screen" id="s4">
+    <div class="s4-wrap">
+      <div class="s4-ring-wrap">
+        <div class="s4-ring"></div>
+        <div class="s4-ring-inner"></div>
+        <div class="s4-pct" id="s4-pct">0%</div>
+      </div>
+      <div class="s4-title">Reading your skin story…</div>
+      <div class="s4-sub">This takes about 5 seconds</div>
+      <div class="s4-steps" id="s4-steps">
+        <div class="s4-step" id="astep-0"><div class="s4-step-icon">01</div><div class="s4-step-text">Scanning face structure</div></div>
+        <div class="s4-step" id="astep-1"><div class="s4-step-icon">02</div><div class="s4-step-text">Detecting skin concerns</div></div>
+        <div class="s4-step" id="astep-2"><div class="s4-step-icon">03</div><div class="s4-step-text">Calculating concern scores</div></div>
+        <div class="s4-step" id="astep-3"><div class="s4-step-icon">04</div><div class="s4-step-text">Building your Avon routine</div></div>
+      </div>
+      <div class="s4-fact">
+        <div class="s4-fact-label">Did You Know?</div>
+        <div class="s4-fact-text">Consistent SPF and a gentle routine can help reduce visible dark spots and post-acne marks over time.</div>
+      </div>
+    </div>
+  </div><!-- /s4 -->
+
+
+  <!-- ══════════════ S5 — RESULTS ══════════════ -->
+  <div class="screen" id="s5">
+
+    <!-- Sticky header -->
+    <div class="s5-header">
+      <button class="s5-hdr-back" onclick="goTo('s1')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Back
+      </button>
+      <div class="s5-hdr-title">Your Results</div>
+      <div class="s5-hdr-loc">Report</div>
+    </div>
+
+    <div class="s5-body">
+
+      <!-- Score Card -->
+      <div class="s5-score-card">
+        <div class="s5-score-row">
+          <div class="score-ring-wrap">
+            <svg width="96" height="96" viewBox="0 0 96 96">
+              <circle cx="48" cy="48" r="40" fill="none" stroke="#F0E8E0" stroke-width="7"/>
+              <circle cx="48" cy="48" r="40" fill="none" stroke="#F97316" stroke-width="7"
+                stroke-dasharray="251" stroke-dashoffset="251"
+                stroke-linecap="round" transform="rotate(-90 48 48)" id="score-arc"/>
+            </svg>
+            <div class="score-ring-inner">
+              <span class="score-num" id="score-num">0</span>
+              <span class="score-total">/100</span>
+            </div>
+          </div>
+          <div class="s5-score-info">
+            <div class="s5-score-lbl">Overall Skin Score</div>
+            <div class="s5-score-verdict" id="score-verdict">Room to Improve</div>
+            <div class="s5-skin-tags">
+              <span class="s5-skin-tag">Combination</span>
+              <span class="s5-skin-tag">Medium Tone</span>
+              <span class="s5-skin-tag">Age 26</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Concern Map -->
+      <div class="s5-section-title">Concern Map</div>
+      <div class="s5-map-card">
+        <div class="s5-map-body">
+          <img class="s5-map-img"
+            src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&h=500&fit=crop&crop=face&auto=format&q=80"
+            alt="Skin concern map"
+            onerror="this.style.background='#F7F2EE'; this.style.height='320px';"
+          />
+          <!-- LEFT pins -->
+          <div class="cm-pin left" style="top:18%;left:2%">
+            <div class="cm-label red">Dark Spots <span class="cm-score">42</span></div>
+            <div class="cm-line red"></div>
+            <div class="cm-dot red"></div>
+          </div>
+          <div class="cm-pin left" style="top:40%;left:2%">
+            <div class="cm-label orange">Acne <span class="cm-score">55</span></div>
+            <div class="cm-line orange"></div>
+            <div class="cm-dot orange"></div>
+          </div>
+          <div class="cm-pin left" style="top:60%;left:2%">
+            <div class="cm-label orange">Texture <span class="cm-score">60</span></div>
+            <div class="cm-line orange"></div>
+            <div class="cm-dot orange"></div>
+          </div>
+          <!-- RIGHT pins -->
+          <div class="cm-pin right" style="top:12%;right:2%">
+            <div class="cm-label green">Hydration <span class="cm-score">75</span></div>
+            <div class="cm-line green"></div>
+            <div class="cm-dot green"></div>
+          </div>
+          <div class="cm-pin right" style="top:34%;right:2%">
+            <div class="cm-label orange">Pores <span class="cm-score">68</span></div>
+            <div class="cm-line orange"></div>
+            <div class="cm-dot orange"></div>
+          </div>
+          <div class="cm-pin right" style="top:56%;right:2%">
+            <div class="cm-label green">Fine Lines <span class="cm-score">85</span></div>
+            <div class="cm-line green"></div>
+            <div class="cm-dot green"></div>
+          </div>
+        </div>
+        <div class="s5-map-legend">
+          <div class="s5-leg-item"><div class="s5-leg-dot" style="background:#E5004B;"></div>Needs Attention</div>
+          <div class="s5-leg-item"><div class="s5-leg-dot" style="background:#F97316;"></div>Average</div>
+          <div class="s5-leg-item"><div class="s5-leg-dot" style="background:#16A34A;"></div>Good</div>
+        </div>
+      </div>
+
+      <!-- Detailed Breakdown -->
+      <div class="s5-section-title">Detailed Breakdown</div>
+      <div class="s5-concerns">
+
+        <div class="s5-cc red">
+          <div class="s5-cc-top">
+            <div class="s5-cc-name">Dark Spots</div>
+            <div class="s5-sev red">Needs Attention</div>
+          </div>
+          <div class="s5-cc-bar"><div class="s5-cc-fill red" data-w="42" style="width:0"></div></div>
+          <div class="s5-cc-score">42 / 100</div>
+          <div class="s5-cc-insight">Uneven pigmentation on cheeks and forehead. SPF is essential, while Vitamin C and Niacinamide are your go-to actives.</div>
+        </div>
+
+        <div class="s5-cc orange">
+          <div class="s5-cc-top">
+            <div class="s5-cc-name">Acne</div>
+            <div class="s5-sev orange">Average</div>
+          </div>
+          <div class="s5-cc-bar"><div class="s5-cc-fill orange" data-w="55" style="width:0"></div></div>
+          <div class="s5-cc-score">55 / 100</div>
+          <div class="s5-cc-insight">Occasional breakouts in the T-zone. A BHA cleanser can help keep pores clear without over-stripping.</div>
+        </div>
+
+        <div class="s5-cc orange">
+          <div class="s5-cc-top">
+            <div class="s5-cc-name">Texture</div>
+            <div class="s5-sev orange">Average</div>
+          </div>
+          <div class="s5-cc-bar"><div class="s5-cc-fill orange" data-w="60" style="width:0"></div></div>
+          <div class="s5-cc-score">60 / 100</div>
+          <div class="s5-cc-insight">Some unevenness in skin surface. The micro-dermabrasion and Protinol in your PM routine will smooth this over time.</div>
+        </div>
+
+        <div class="s5-cc orange">
+          <div class="s5-cc-top">
+            <div class="s5-cc-name">Pores</div>
+            <div class="s5-sev orange">Average</div>
+          </div>
+          <div class="s5-cc-bar"><div class="s5-cc-fill orange" data-w="68" style="width:0"></div></div>
+          <div class="s5-cc-score">68 / 100</div>
+          <div class="s5-cc-insight">Visible pores around the nose. Niacinamide and consistent cleansing will help minimise their appearance.</div>
+        </div>
+
+        <div class="s5-cc green">
+          <div class="s5-cc-top">
+            <div class="s5-cc-name">Hydration</div>
+            <div class="s5-sev green">Good</div>
+          </div>
+          <div class="s5-cc-bar"><div class="s5-cc-fill green" data-w="75" style="width:0"></div></div>
+          <div class="s5-cc-score">75 / 100</div>
+          <div class="s5-cc-insight">Moisture levels are adequate. Keep up the hydration — your current routine is working.</div>
+        </div>
+
+        <div class="s5-cc green">
+          <div class="s5-cc-top">
+            <div class="s5-cc-name">Fine Lines</div>
+            <div class="s5-sev green">Good</div>
+          </div>
+          <div class="s5-cc-bar"><div class="s5-cc-fill green" data-w="85" style="width:0"></div></div>
+          <div class="s5-cc-score">85 / 100</div>
+          <div class="s5-cc-insight">Minimal signs of ageing. Preventive antioxidant care is all you need right now.</div>
+        </div>
+
+      </div>
+
+      <div class="s5-action-plan">
+        <div class="s5-action-head">
+          <div>
+            <div class="s5-action-kicker">Action plan</div>
+            <div class="s5-action-title">Your 7-day plan</div>
+          </div>
+          <div class="s5-action-badge">AM + PM</div>
+        </div>
+        <div class="s5-action-list">
+          <div class="s5-action"><div class="s5-action-num">1</div><div><strong>Protect every morning</strong><span>Apply SPF as the last AM step to support dark spot care.</span></div></div>
+          <div class="s5-action"><div class="s5-action-num">2</div><div><strong>Treat marks consistently</strong><span>Use Vitamin C in the morning and avoid harsh scrubbing on active breakouts.</span></div></div>
+          <div class="s5-action"><div class="s5-action-num">3</div><div><strong>Repair at night</strong><span>Prioritise barrier-supporting cream so texture improves without over-drying.</span></div></div>
+        </div>
+      </div>
+
+      <!-- Routine CTA -->
+      <div class="s5-routine-cta">
+        <div class="s5-cta-text">
+          <div class="s5-cta-title">Your Avon Routine is Ready</div>
+          <div class="s5-cta-sub">7 products · AM + PM · Targeting dark spots &amp; acne</div>
+        </div>
+        <button class="s5-cta-btn" onclick="goTo('s6')">See Routine →</button>
+      </div>
+
+    </div>
+  </div><!-- /s5 -->
+
+
+  <!-- ══════════════ S6 — ROUTINE ══════════════ -->
+  <div class="screen" id="s6">
+    <div class="s6-hdr">
+      <button class="s6-back" onclick="goTo('s5')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Back to Report
+      </button>
+      <div class="s6-htitle">Your Avon<br>Routine</div>
+      <div class="s6-hsub">Personalised for combination skin · Dark spots focus</div>
+    </div>
+
+    <div class="s6-body">
+
+      <div class="s6-routine-intro">
+        <div class="s6-routine-chiprow">
+          <span>AM protection</span>
+          <span>PM repair</span>
+          <span>Dark spot focus</span>
+        </div>
+      </div>
+
+      <div class="s6-routine-label">Morning Routine</div>
+
+      <div class="s6-pc">
+        <div class="s6-pc-img">
+          <span>Cleanse</span>
+          <img src="https://cdn.shopify.com/s/files/1/0713/1306/4175/files/AnewReversalistCleanser_C31251_1.jpg?v=1768813062" alt="Avon Anew Reversalist Cleanser" loading="lazy" decoding="async" onerror="this.style.display='none'">
+        </div>
+        <div class="s6-pc-info">
+          <div class="s6-pc-step">Step 1 · Cleanse</div>
+          <div class="s6-pc-name">Avon Anew Reversalist Cleanser</div>
+          <div class="s6-pc-why">Gentle milk cleanser that preps combination skin without over-stripping.</div>
+          <div class="s6-pc-bottom">
+            <div><span class="s6-pc-price">₹899</span><span class="s6-pc-orig">₹999</span><span class="s6-pc-off">10% off</span></div>
+            <button class="s6-add-btn" onclick="addToCart(this, 899)">Add to Cart</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="s6-pc">
+        <div class="s6-pc-img">
+          <span>Serum</span>
+          <img src="https://cdn.shopify.com/s/files/1/0713/1306/4175/files/c35783_anew_radiance_maximising_serum_vitamin-c_1.png?v=1724485320" alt="Avon Anew Radiance Maximising Serum Vitamin C" loading="lazy" decoding="async" onerror="this.style.display='none'">
+        </div>
+        <div class="s6-pc-info">
+          <div class="s6-pc-step">Step 2 · Treat</div>
+          <div class="s6-pc-name">Avon Anew Radiance Maximising Serum Vitamin C</div>
+          <div class="s6-pc-why">Vitamin C directly targets dark spots. Your #1 concern fix.</div>
+          <div class="s6-pc-bottom">
+            <div><span class="s6-pc-price">₹1,349</span><span class="s6-pc-orig">₹1,499</span><span class="s6-pc-off">10% off</span></div>
+            <button class="s6-add-btn" onclick="addToCart(this, 1349)">Add to Cart</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="s6-pc">
+        <div class="s6-pc-img">
+          <span>Cream</span>
+          <img src="https://cdn.shopify.com/s/files/1/0713/1306/4175/files/1_60c9b334-331f-4df6-88d6-4ed1ba746e36.jpg?v=1751521623" alt="Avon Anew Skin Renewal Power Cream" loading="lazy" decoding="async" onerror="this.style.display='none'">
+        </div>
+        <div class="s6-pc-info">
+          <div class="s6-pc-step">Step 3 · Moisturise</div>
+          <div class="s6-pc-name">Avon Anew Skin Renewal Power Cream – 50ml</div>
+          <div class="s6-pc-why">Protinol™ strengthens skin barrier — essential for combination skin.</div>
+          <div class="s6-pc-bottom">
+            <div><span class="s6-pc-price">₹2,294</span><span class="s6-pc-orig">₹2,699</span><span class="s6-pc-off">15% off</span></div>
+            <button class="s6-add-btn" onclick="addToCart(this, 2294)">Add to Cart</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="s6-pc">
+        <div class="s6-pc-img">
+          <span>SPF</span>
+          <img src="https://cdn.shopify.com/s/files/1/0713/1306/4175/files/C38885.jpg?v=1762941566" alt="Avon Anew BHA Even Texture and Tone Day Cream SPF 35" loading="lazy" decoding="async" onerror="this.style.display='none'">
+        </div>
+        <div class="s6-pc-info">
+          <div class="s6-pc-step">Step 4 · Protect</div>
+          <div class="s6-pc-name">Avon Anew BHA Even Texture &amp; Tone Day Cream SPF 35</div>
+          <div class="s6-pc-why">SPF is non-negotiable when treating dark spots — UV makes pigmentation worse.</div>
+          <div class="s6-pc-bottom">
+            <div><span class="s6-pc-price">₹1,359</span><span class="s6-pc-orig">₹1,699</span><span class="s6-pc-off">20% off</span></div>
+            <button class="s6-add-btn" onclick="addToCart(this, 1359)">Add to Cart</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="s6-routine-label">Night Routine</div>
+
+      <div class="s6-pc">
+        <div class="s6-pc-img">
+          <span>Polish</span>
+          <img src="https://cdn.shopify.com/s/files/1/0713/1306/4175/files/C38828.jpg?v=1760355688" alt="Avon Anew C Radiance Maximising Micro-Dermabrasion Vitamin C" loading="lazy" decoding="async" onerror="this.style.display='none'">
+        </div>
+        <div class="s6-pc-info">
+          <div class="s6-pc-step">Step 1 · Deep Cleanse</div>
+          <div class="s6-pc-name">Avon Anew C Radiance Maximising Micro-Dermabrasion Vitamin C</div>
+          <div class="s6-pc-why">Removes dead cells and tackles post-acne marks. Use 2–3x per week.</div>
+          <div class="s6-pc-bottom">
+            <div><span class="s6-pc-price">₹1,274</span><span class="s6-pc-orig">₹1,499</span><span class="s6-pc-off">15% off</span></div>
+            <button class="s6-add-btn" onclick="addToCart(this, 1274)">Add to Cart</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="s6-pc">
+        <div class="s6-pc-img">
+          <span>Repair</span>
+          <img src="https://cdn.shopify.com/s/files/1/0713/1306/4175/files/C388021.jpg?v=1773219540" alt="Avon Anew Skin Renewal Power Serum" loading="lazy" decoding="async" onerror="this.style.display='none'">
+        </div>
+        <div class="s6-pc-info">
+          <div class="s6-pc-step">Step 2 · Night Serum</div>
+          <div class="s6-pc-name">Avon Anew Skin Renewal Power Serum – 30ml</div>
+          <div class="s6-pc-why">Smooths texture while you sleep. Protinol™ rebuilds overnight.</div>
+          <div class="s6-pc-bottom">
+            <div><span class="s6-pc-price">₹2,379</span><span class="s6-pc-orig">₹2,799</span><span class="s6-pc-off">15% off</span></div>
+            <button class="s6-add-btn" onclick="addToCart(this, 2379)">Add to Cart</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="s6-pc">
+        <div class="s6-pc-img">
+          <span>Night Cream</span>
+          <img src="https://cdn.shopify.com/s/files/1/0713/1306/4175/files/38404-3.jpg?v=1752740908" alt="Anew Platinum Lift and Tighten Night Cream" loading="lazy" decoding="async" onerror="this.style.display='none'">
+        </div>
+        <div class="s6-pc-info">
+          <div class="s6-pc-step">Step 3 · Night Cream</div>
+          <div class="s6-pc-name">Anew Platinum Lift and Tighten Night Cream – 50ml</div>
+          <div class="s6-pc-why">Rich overnight repair — prevention for fine lines while you sleep.</div>
+          <div class="s6-pc-bottom">
+            <div><span class="s6-pc-price">₹2,804</span><span class="s6-pc-orig">₹3,299</span><span class="s6-pc-off">15% off</span></div>
+            <button class="s6-add-btn" onclick="addToCart(this, 2804)">Add to Cart</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="s6-total">
+        <span class="s6-total-lbl" id="cart-count-lbl">0 products · Routine Total</span>
+        <span class="s6-total-val" id="cart-total">₹0</span>
+      </div>
+
+      <button class="s6-shop-btn" onclick="showToast('Routine added to checkout')">Shop Full Routine →</button>
+
+      <div class="s6-share">
+        <div class="s6-share-title">Share Your Results</div>
+        <div class="s6-share-sub">Show your skin story to friends</div>
+        <div class="s6-share-btns">
+          <button type="button" class="s6-share-btn whatsapp" title="Share to WhatsApp" aria-label="Share to WhatsApp">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="currentColor" d="M20.52 3.48A11.85 11.85 0 0 0 12.08 0C5.46 0 .08 5.38.08 12c0 2.12.56 4.19 1.63 6.02L0 24l6.14-1.61A12.02 12.02 0 0 0 12.08 24h.01C18.7 24 24 18.62 24 12A11.9 11.9 0 0 0 20.52 3.48Zm-8.43 18.5h-.01a9.95 9.95 0 0 1-5.07-1.39l-.36-.21-3.64.95.97-3.55-.23-.37A9.93 9.93 0 0 1 2.12 12c0-5.49 4.47-9.96 9.97-9.96 2.66 0 5.16 1.04 7.04 2.92A9.89 9.89 0 0 1 22.04 12c0 5.49-4.46 9.98-9.95 9.98Zm5.46-7.46c-.3-.15-1.77-.87-2.04-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.95 1.17-.17.2-.35.22-.65.07-.3-.15-1.27-.47-2.41-1.49-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.49 0 1.46 1.07 2.88 1.22 3.08.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.23 1.36.2 1.88.12.57-.09 1.77-.72 2.01-1.42.25-.69.25-1.29.18-1.42-.08-.12-.28-.19-.58-.34Z"/>
+            </svg>
+          </button>
+          <button type="button" class="s6-share-btn copy-link" title="Copy link" aria-label="Copy link">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M10 13a5 5 0 0 0 7.07 0l3.54-3.54a5 5 0 0 0-7.07-7.07l-2.03 2.03" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M14 11a5 5 0 0 0-7.07 0L3.39 14.54a5 5 0 0 0 7.07 7.07l2.03-2.03" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button type="button" class="s6-share-btn instagram" title="Share to Instagram" aria-label="Share to Instagram">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="5" ry="5" fill="none" stroke="currentColor" stroke-width="2"/>
+              <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/>
+              <circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"/>
+            </svg>
+          </button>
+        </div>
+        <button class="s6-retake" onclick="retakeAnalysis()">← Retake Analysis</button>
+      </div>
+
+    </div>
+  </div><!-- /s6 -->
+
+</div><!-- /app -->
+</div><!-- /app-wrap -->
+
+
+<script>
+/* ═══════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════ */
+let current = 's1';
+let analyzeTimers = [];
+
+const screenLabels = {
+  s1: 'Skin Analysis', sGuide: '', s2: 'Camera Scan',
+  s3: 'Your Details',  s4: 'Analysing',
+  s5: 'Your Results',  s6: 'Your Routine'
+};
+const screenOrder = ['s1','sGuide','s2','s3','s4','s5','s6'];
+
+function goTo(id) {
+  if (id === current) return;
+  const prev = current;
+  current = id;
+
+  const isBack = screenOrder.indexOf(id) < screenOrder.indexOf(prev);
+
+  // Camera mode class
+  document.body.classList.toggle('cam-mode', id === 's2');
+
+  // Stop camera if leaving s2
+  if (prev === 's2') stopCamera();
+
+  const label = document.getElementById('screen-label');
+  if (label) label.textContent = screenLabels[id] || '';
+
+  const cur = document.getElementById(prev);
+  const nxt = document.getElementById(id);
+
+  nxt.classList.add('active','slide-in');
+  cur.classList.add('slide-out');
+  if (isBack) { nxt.classList.add('back'); cur.classList.add('back'); }
+
+  let done = false;
+  function finish() {
+    if (done) return; done = true;
+    cur.classList.remove('active','slide-out','back');
+    nxt.classList.remove('slide-in','back');
+    nxt.scrollTop = 0; window.scrollTo(0, 0);
+  }
+  nxt.addEventListener('animationend', function h(){ nxt.removeEventListener('animationend',h); finish(); });
+  setTimeout(finish, 380);
+
+  onEnter(id);
+}
+
+function onEnter(id) {
+  if (id === 's2') startCamera();
+  if (id === 's3') { currentQ = 0; quizAnswers = {}; renderQuiz(); }
+  if (id === 's5') setTimeout(animateReport, 150);
+}
+
+function headerBack() {
+  const backMap = { sGuide:'s1', s2:'sGuide', s3:'s2', s4:'s2', s5:'s1', s6:'s5' };
+  if (current === 's3' && currentQ > 0) {
+    currentQ--;
+    renderQuiz();
+    return;
+  }
+  if (backMap[current]) goTo(backMap[current]);
+  else window.location.href = 'homepage.html';
+}
+
+
+/* ═══════════════════════════════════════
+   CAMERA
+═══════════════════════════════════════ */
+let cameraStream = null;
+let detectTimer = null;
+
+async function startCamera() {
+  const wrap = document.querySelector('#s2 .s2-wrap');
+  const video = document.getElementById('s2-video');
+  const preview = document.getElementById('s2-preview');
+  const oval = document.getElementById('s2-oval');
+  const status = document.getElementById('s2-status');
+  const statusText = document.getElementById('s2-status-text');
+
+  // Reset state
+  wrap.classList.remove('previewing');
+  preview.removeAttribute('src');
+  oval.className = 's2-oval active';
+  status.className = 's2-status positioning';
+  statusText.textContent = 'Centre your face in the oval';
+  clearTimeout(detectTimer);
+
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 720 }, height: { ideal: 1280 } },
+        audio: false
+      });
+      cameraStream = stream;
+      video.srcObject = stream;
+      video.addEventListener('playing', () => video.classList.add('ready'), { once: true });
+      await video.play();
+    } catch (err) {
+      statusText.textContent = err.name === 'NotAllowedError'
+        ? 'Camera denied — allow camera access to continue'
+        : 'Camera unavailable — try again';
+    }
+  } else {
+    statusText.textContent = 'Camera not supported on this device';
+  }
+
+  // Simulate face detection progression
+  detectTimer = setTimeout(() => {
+    oval.className = 's2-oval detecting';
+    status.className = 's2-status scanning';
+    statusText.textContent = 'Aligning…';
+
+    detectTimer = setTimeout(() => {
+      oval.className = 's2-oval detected';
+      status.className = 's2-status detected';
+      statusText.textContent = 'Face Detected ✓';
+    }, 1800);
+  }, 2000);
+}
+
+function stopCamera() {
+  clearTimeout(detectTimer);
+  const video = document.getElementById('s2-video');
+  if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+  video.srcObject = null;
+  video.classList.remove('ready');
+}
+
+function capturePhoto() {
+  const wrap = document.querySelector('#s2 .s2-wrap');
+  const video = document.getElementById('s2-video');
+  const preview = document.getElementById('s2-preview');
+  const status = document.getElementById('s2-status');
+  const statusText = document.getElementById('s2-status-text');
+
+  // Capture frame
+  if (video.srcObject && video.readyState >= 2 && video.videoWidth > 0) {
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.translate(canvas.width, 0); ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0);
+    // canvas.toDataURL() -> send to analysis API
+    preview.src = canvas.toDataURL('image/jpeg', 0.92);
+    wrap.classList.add('previewing');
+    status.className = 's2-status detected';
+    statusText.textContent = 'Preview ready';
+    stopCamera();
+  } else {
+    status.className = 's2-status scanning';
+    statusText.textContent = 'Camera not ready — try again';
+  }
+}
+
+function retakePhoto() {
+  const wrap = document.querySelector('#s2 .s2-wrap');
+  const preview = document.getElementById('s2-preview');
+  wrap.classList.remove('previewing');
+  preview.removeAttribute('src');
+  startCamera();
+}
+
+function proceedToAnalysis() {
+  stopCamera();
+  currentQ = 0;
+  quizAnswers = {};
+  startAnalyzing('s3');
+}
+
+
+/* ═══════════════════════════════════════
+   QUIZ
+═══════════════════════════════════════ */
+const questions = [
+  {
+    type: 'info',
+    section: 'Personal Details',
+    q: 'What is your name and mobile number?',
+    reason: "We'll attach these details to your scan report for the Avon consultation flow.",
+    fields: [
+      { id: 'name',    label: 'Your Name', type: 'text', placeholder: 'e.g. Priya Sharma' },
+      { id: 'mobile',  label: 'Mobile Number', type: 'tel', placeholder: 'e.g. 98765 43210' }
+    ]
+  },
+  {
+    section: 'About Your Skin',
+    q: 'How would you describe your skin type?',
+    reason: 'So we can match the right product textures for you.',
+    opts: [
+      { main: 'Oily', sub: 'Feels shiny through the day' },
+      { main: 'Dry', sub: 'Often feels tight or flaky' },
+      { main: 'Combination', sub: 'Oily T-zone with drier cheeks' },
+      { main: 'Normal', sub: 'Feels balanced most days' },
+      { main: 'Not sure', sub: 'Let the scan guide the recommendation' }
+    ]
+  },
+  {
+    section: 'About Your Skin',
+    q: "What's your top skincare goal right now?",
+    reason: 'This helps us prioritise your Avon routine.',
+    opts: [
+      { main: 'Fade pigmentation', sub: 'Dark spots, melasma, or uneven tone' },
+      { main: 'Reduce acne and breakouts', sub: 'Calm active spots and marks' },
+      { main: 'Hydration and glow', sub: 'Improve dullness and moisture' },
+      { main: 'Anti-ageing', sub: 'Fine lines, firmness, and texture' },
+      { main: 'Overall maintenance', sub: 'Keep skin healthy and consistent' }
+    ]
+  },
+  {
+    section: 'Hormonal Factors',
+    q: 'Are you currently pregnant or recently postpartum?',
+    reason: 'Hormonal shifts can commonly trigger pigmentation.',
+    opts: [
+      { main: 'Yes', sub: 'Use a pregnancy-safe routine approach' },
+      { main: 'No', sub: 'Continue with standard routine matching' },
+      { main: 'Prefer not to say', sub: 'We will keep recommendations general' }
+    ]
+  },
+  {
+    section: 'Skin Behavior',
+    q: 'How often do you get breakouts?',
+    reason: 'Breakouts can lead to post-inflammatory pigmentation.',
+    opts: [
+      { main: 'Frequently', sub: 'New breakouts most weeks' },
+      { main: 'Occasionally', sub: 'A few breakouts each month' },
+      { main: 'Rarely', sub: 'Only sometimes or seasonally' },
+      { main: 'Never', sub: 'Breakouts are not a concern' }
+    ]
+  },
+  {
+    section: 'Routine Style',
+    q: 'How much time do you want your routine to take?',
+    reason: 'We will keep the final steps realistic for your day.',
+    opts: [
+      { main: 'Under 5 minutes', sub: 'Essential products only' },
+      { main: '5 to 10 minutes', sub: 'Balanced AM and PM routine' },
+      { main: 'I enjoy a full routine', sub: 'Layered care with targeted treatments' }
+    ]
+  }
+];
+
+let currentQ = 0;
+let quizAnswers = {};
+
+function renderQuiz() {
+  const q = questions[currentQ];
+  const total = questions.length;
+
+  let bars = '';
+  for (let i = 0; i < total; i++) {
+    const cls = i < currentQ ? 'done' : i === currentQ ? 'active' : '';
+    bars += `<div class="s3-bar ${cls}"></div>`;
+  }
+  document.getElementById('quiz-progress').innerHTML = total > 1 ? bars : '';
+  document.getElementById('quiz-step-label').textContent = `${currentQ + 1} of ${total}`;
+  if (current === 's3') {
+    const label = document.getElementById('screen-label');
+    if (label) label.textContent = total > 1 ? `${currentQ + 1} of ${total}` : 'Your Details';
+  }
+
+  if (q.type === 'info') {
+    let fields = q.fields.map(f => `
+      <div class="s3-field">
+        <label class="s3-field-lbl" for="qf-${f.id}">${f.label}</label>
+        <input class="s3-field-input" id="qf-${f.id}" type="${f.type}" placeholder="${f.placeholder}"
+          value="${quizAnswers['info_'+f.id] || ''}"
+          oninput="quizAnswers['info_${f.id}']=this.value"/>
+      </div>`).join('');
+
+    document.getElementById('quiz-body').innerHTML = `
+      <div class="s3-card">
+        <div class="s3-section">${q.section}</div>
+        <div class="s3-q">${q.q}</div>
+        <div class="s3-reason">${q.reason}</div>
+        ${fields}
+        <div class="s3-profile-note">Your details stay with this prototype report and are not shown on the public page.</div>
+        <button class="s3-continue" onclick="infoNext()">
+          Continue
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>`;
+  } else {
+    const savedIdx = quizAnswers[currentQ];
+    const opts = q.opts.map((o, idx) => `
+      <div class="s3-opt ${savedIdx === idx ? 'sel' : ''}" data-index="${idx + 1}" onclick="selectOpt(this, ${idx})">
+        <div>
+          <div class="s3-opt-main">${o.main}</div>
+          <div class="s3-opt-sub">${o.sub}</div>
+        </div>
+      </div>`).join('');
+
+    document.getElementById('quiz-body').innerHTML = `
+      <div class="s3-card">
+        <div class="s3-section">${q.section}</div>
+        <div class="s3-q">${q.q}</div>
+        <div class="s3-reason">${q.reason}</div>
+        <div class="s3-opts">${opts}</div>
+      </div>`;
+  }
+}
+
+function infoNext() {
+  if (currentQ < questions.length - 1) {
+    currentQ++;
+    renderQuiz();
+  } else {
+    goTo('s5');
+  }
+}
+
+function selectOpt(el, idx) {
+  document.querySelectorAll('#quiz-body .s3-opt').forEach(o => o.classList.remove('sel'));
+  el.classList.add('sel');
+  quizAnswers[currentQ] = idx;
+  setTimeout(() => {
+    if (currentQ < questions.length - 1) { currentQ++; renderQuiz(); }
+    else goTo('s5');
+  }, 320);
+}
+
+function quizBack() {
+  if (currentQ > 0) { currentQ--; renderQuiz(); }
+  else goTo('s2');
+}
+
+
+/* ═══════════════════════════════════════
+   ANALYZING
+═══════════════════════════════════════ */
+const stepIcons = ['01','02','03','04'];
+
+function resetAnalyze() {
+  document.querySelectorAll('.s4-step').forEach((s, i) => {
+    s.classList.remove('on','done');
+    s.querySelector('.s4-step-icon').textContent = stepIcons[i];
+  });
+  document.getElementById('s4-pct').textContent = '0%';
+}
+
+function startAnalyzing(nextScreen = 's5') {
+  analyzeTimers.forEach(clearInterval);
+  analyzeTimers = [];
+  resetAnalyze();
+  goTo('s4');
+
+  let pct = 0;
+  const pctEl = document.getElementById('s4-pct');
+  const steps = document.querySelectorAll('.s4-step');
+  let si = 0;
+  steps[0].classList.add('on');
+
+  const pi = setInterval(() => {
+    pct = Math.min(pct + Math.random() * 10 + 3, 95);
+    pctEl.textContent = Math.round(pct) + '%';
+  }, 200);
+  analyzeTimers.push(pi);
+
+  const sti = setInterval(() => {
+    if (si < steps.length) {
+      steps[si].classList.remove('on'); steps[si].classList.add('done');
+      steps[si].querySelector('.s4-step-icon').textContent = '✓';
+    }
+    si++;
+    if (si < steps.length) steps[si].classList.add('on');
+    else clearInterval(sti);
+  }, 1100);
+  analyzeTimers.push(sti);
+
+  const fin = setTimeout(() => {
+    analyzeTimers.forEach(clearInterval);
+    pctEl.textContent = '100%';
+    setTimeout(() => goTo(nextScreen), 700);
+  }, 5000);
+  analyzeTimers.push(fin);
+}
+
+
+/* ═══════════════════════════════════════
+   RESULTS ANIMATIONS
+═══════════════════════════════════════ */
+function animateReport() {
+  // Score ring (orange for this design)
+  const arc = document.getElementById('score-arc');
+  const numEl = document.getElementById('score-num');
+  if (!arc || !numEl) return;
+
+  const score = 73;
+  const circ = 2 * Math.PI * 40; // 251.3
+  const offset = circ - (score / 100) * circ;
+
+  arc.style.transition = 'none';
+  arc.style.strokeDashoffset = circ;
+  numEl.textContent = '0';
+
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    arc.style.transition = 'stroke-dashoffset 1.5s cubic-bezier(.4,0,.2,1)';
+    arc.style.strokeDashoffset = offset;
+  }));
+
+  let n = 0;
+  const ni = setInterval(() => {
+    n = Math.min(n + 2, score); numEl.textContent = n;
+    if (n >= score) clearInterval(ni);
+  }, 30);
+
+  // Set verdict
+  const verdict = score >= 80 ? 'Looking Great' : score >= 65 ? 'Room to Improve' : 'Needs Some Care';
+  document.getElementById('score-verdict').textContent = verdict;
+
+  // Animate concern bars
+  document.querySelectorAll('.s5-cc-fill[data-w]').forEach((bar, i) => {
+    bar.style.width = '0';
+    setTimeout(() => { bar.style.width = bar.dataset.w + '%'; }, 350 + i * 130);
+  });
+}
+
+
+/* ═══════════════════════════════════════
+   CART
+═══════════════════════════════════════ */
+const cart = {};
+
+function addToCart(btn, price) {
+  if (cart[price]) {
+    delete cart[price];
+    btn.textContent = 'Add to Cart';
+    btn.classList.remove('added');
+  } else {
+    cart[price] = true;
+    btn.textContent = 'Added ✓';
+    btn.classList.add('added');
+    showToast('Added to cart!');
+  }
+  const total = Object.keys(cart).reduce((s,p) => s + parseInt(p), 0);
+  const count = Object.keys(cart).length;
+  document.getElementById('cart-total').textContent = total > 0 ? '₹' + total.toLocaleString('en-IN') : '₹0';
+  document.getElementById('cart-count-lbl').textContent = `${count} product${count !== 1 ? 's' : ''} · Routine Total`;
+}
+
+
+/* ═══════════════════════════════════════
+   TOAST
+═══════════════════════════════════════ */
+let toastTimer;
+function showToast(msg) {
+  let t = document.getElementById('app-toast');
+  if (!t) { t = document.createElement('div'); t.id = 'app-toast'; t.className = 'toast'; document.body.appendChild(t); }
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+/* Share buttons */
+document.querySelectorAll('.s6-share-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const a = btn.getAttribute('title') || '';
+    if (a.includes('Copy')) { navigator.clipboard?.writeText(location.href).catch(()=>{}); showToast('Link copied!'); }
+    else showToast('Share opened!');
+  });
+});
+
+/* ═══════════════════════════════════════
+   RETAKE
+═══════════════════════════════════════ */
+function retakeAnalysis() {
+  // Reset all state
+  Object.keys(cart).forEach(k => delete cart[k]);
+  document.querySelectorAll('.s6-add-btn').forEach(b => { b.textContent = 'Add to Cart'; b.classList.remove('added'); });
+  document.getElementById('cart-total').textContent = '₹0';
+  document.getElementById('cart-count-lbl').textContent = '0 products · Routine Total';
+  goTo('s1');
+}
+
+/* ═══════════════════════════════════════
+   INIT
+═══════════════════════════════════════ */
+renderQuiz();
+</script>
+
+</body>
+</html>

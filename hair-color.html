@@ -1,0 +1,4005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Avon - AI Hair Analysis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="tokens.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red: #E5004B;
+      --red-hover: #c40040;
+      --red-hov: #c40040;
+      --orange: #F97316;
+      --green: #16A34A;
+      --amber: #EAB308;
+      --dark: #0A0A0A;
+      --ink: #111111;
+      --ink-2: #555555;
+      --ink-3: #999999;
+      --muted: #999999;
+      --soft: #FFFCFA;
+      --cream: #F7F1ED;
+      --warm: #EFE6DE;
+      --surface: #F7F6F3;
+      --white: #FFFFFF;
+      --border: #EBEBEB;
+      --line: rgba(21, 18, 23, 0.10);
+      --line-dark: rgba(255, 255, 255, 0.12);
+      --success: #16A34A;
+      --warning: #F97316;
+      --danger: #E5004B;
+      --font: 'Montserrat', sans-serif;
+      --fh: 'Montserrat', sans-serif;
+      --fb: 'Montserrat', sans-serif;
+      --premium-ink: #151217;
+      --premium-soft: #FBF7F4;
+      --premium-warm: #EFE6DE;
+      --premium-sage: #DCE9DF;
+      --premium-plum: #3A1627;
+      --premium-line: rgba(21,18,23,.1);
+      --radius: 18px;
+      --pill: 999px;
+      --header-h: 58px;
+    }
+
+    html, body { min-height: 100%; }
+
+    body {
+      min-height: 100dvh;
+      font-family: var(--fb);
+      color: var(--premium-ink);
+      background:
+        linear-gradient(135deg, #E9E1D8 0%, #F7F1ED 44%, #DCE9DF 100%);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    body.camera-mode {
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    a { color: inherit; }
+
+    button:focus-visible,
+    input:focus-visible {
+      outline: 2px solid var(--red);
+      outline-offset: 3px;
+    }
+
+    .app-wrap {
+      width: 100%;
+      min-height: 100dvh;
+      display: flex;
+      justify-content: center;
+      overflow-x: hidden;
+    }
+
+    .app {
+      position: relative;
+      width: 100%;
+      max-width: 430px;
+      min-height: 100dvh;
+      overflow: hidden;
+      background: var(--soft);
+      min-width: 0;
+    }
+
+    @media (min-width: 520px) {
+      .app-wrap { padding: 28px 0 40px; }
+      .app {
+        min-height: calc(100dvh - 56px);
+        max-height: calc(100dvh - 56px);
+        border-radius: 34px;
+        overflow-y: auto;
+        scrollbar-width: none;
+      }
+      .app::-webkit-scrollbar { display: none; }
+      body.camera-mode .app {
+        height: calc(100dvh - 56px);
+        min-height: calc(100dvh - 56px);
+        max-height: calc(100dvh - 56px);
+        overflow: hidden;
+      }
+    }
+
+    .sdk-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: var(--header-h);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 18px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 252, 250, 0.92);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    body.camera-mode .sdk-header { display: none; }
+
+    .sdk-back,
+    .sdk-home {
+      display: inline-flex;
+      flex: 1 1 0;
+      min-width: 0;
+      align-items: center;
+      gap: 6px;
+      background: transparent;
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .sdk-back:hover,
+    .sdk-home:hover { color: var(--red); }
+
+    .sdk-logo {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      flex: 0 0 auto;
+      color: var(--red);
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-decoration: none;
+    }
+
+    .sdk-label {
+      flex: 1 1 0;
+      min-width: 0;
+      overflow: hidden;
+      color: rgba(21, 18, 23, 0.5);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-align: right;
+      text-overflow: ellipsis;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .sdk-spacer {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    .screen {
+      display: none;
+      min-height: calc(100dvh - var(--header-h));
+      flex-direction: column;
+      overflow-x: hidden;
+      overflow-y: auto;
+      background: var(--soft);
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+
+    .screen.active {
+      display: flex;
+      height: calc(100dvh - var(--header-h));
+      min-height: 0;
+    }
+
+    body.camera-mode .screen.active {
+      height: 100dvh;
+    }
+
+    @media (min-width: 520px) {
+      .screen.active {
+        height: calc(100dvh - 114px);
+      }
+
+      body.camera-mode .screen.active {
+        height: calc(100dvh - 56px);
+      }
+    }
+
+    .screen.slide-in,
+    .screen.slide-out {
+      position: absolute;
+      inset: var(--header-h) 0 0;
+      display: flex;
+    }
+
+    body.camera-mode .screen.slide-in,
+    body.camera-mode .screen.slide-out { inset: 0; }
+
+    .screen.slide-in { animation: slideIn 0.32s cubic-bezier(.4, 0, .2, 1) forwards; }
+    .screen.slide-out { animation: slideOut 0.32s cubic-bezier(.4, 0, .2, 1) forwards; }
+    .screen.slide-in.back { animation-name: slideInBack; }
+    .screen.slide-out.back { animation-name: slideOutBack; }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0.5; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+      from { transform: translateX(0); opacity: 1; }
+      to { transform: translateX(-100%); opacity: 0.5; }
+    }
+    @keyframes slideInBack {
+      from { transform: translateX(-100%); opacity: 0.5; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOutBack {
+      from { transform: translateX(0); opacity: 1; }
+      to { transform: translateX(100%); opacity: 0.5; }
+    }
+
+    .btn-primary,
+    .btn-dark,
+    .btn-ghost {
+      display: inline-flex;
+      min-height: 54px;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      border-radius: var(--pill);
+      padding: 0 22px;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-decoration: none;
+      transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: var(--red);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--red-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-dark {
+      background: var(--dark);
+      color: #fff;
+    }
+
+    .btn-ghost {
+      border: 1.5px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+    }
+
+    .btn-ghost:hover {
+      border-color: rgba(229, 0, 75, 0.28);
+      color: var(--red);
+    }
+
+    .icon {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+      stroke: currentColor;
+      stroke-width: 2.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    /* Screen 1 */
+    .landing-hero {
+      position: relative;
+      min-height: calc(100dvh - var(--header-h));
+      display: flex;
+      align-items: flex-end;
+      overflow: hidden;
+      padding: 26px 22px calc(26px + env(safe-area-inset-bottom, 0px));
+      color: #fff;
+      background:
+        linear-gradient(180deg, rgba(10,10,10,0.04) 0%, rgba(10,10,10,0.20) 34%, rgba(10,10,10,0.80) 100%),
+        url("hair.png") center top / cover;
+      text-align: left;
+    }
+
+    .landing-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border: 0;
+      border-radius: 0;
+      background: linear-gradient(180deg, transparent 0%, rgba(229,0,75,0.16) 58%, rgba(21,18,23,0.44) 100%);
+      pointer-events: none;
+    }
+
+    .landing-hero__content {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+    }
+
+    .eyebrow {
+      margin-bottom: 10px;
+      color: rgba(255,255,255,0.84);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .landing-title {
+      max-width: 340px;
+      margin-bottom: 14px;
+      color: #fff;
+      font-size: 36px;
+      font-weight: 600;
+      line-height: 1.08;
+    }
+
+    .landing-title span { color: #fff; }
+
+    .landing-copy {
+      max-width: 330px;
+      margin-bottom: 22px;
+      color: rgba(255,255,255,0.78);
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.55;
+    }
+
+    .trust-row {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .trust-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: var(--pill);
+      background: rgba(255, 255, 255, 0.10);
+      padding: 0 10px;
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 10px;
+      font-weight: 600;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .landing-step-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .landing-mini-step {
+      min-height: 76px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 18px;
+      background: rgba(255,255,255,0.14);
+      color: #fff;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    .landing-mini-step svg {
+      width: 18px;
+      height: 18px;
+      color: #fff;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .landing-mini-step span {
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1.1;
+      text-align: center;
+    }
+
+    .guide-screen {
+      background:
+        linear-gradient(180deg, #FFFCFA 0%, #FBF7F4 100%);
+      color: var(--premium-ink);
+    }
+
+    .guide-body {
+      display: flex;
+      min-height: 100%;
+      flex-direction: column;
+      padding: 24px 20px calc(28px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .guide-kicker {
+      margin-bottom: 10px;
+      color: var(--red);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .guide-title {
+      max-width: 340px;
+      margin: 0 0 8px;
+      color: var(--premium-ink);
+      font-size: 28px;
+      font-weight: 600;
+      line-height: 1.12;
+      letter-spacing: 0;
+    }
+
+    .guide-copy {
+      max-width: 340px;
+      margin: 0 0 22px;
+      color: rgba(21, 18, 23, 0.58);
+      font-size: 13px;
+      font-weight: 400;
+      line-height: 1.55;
+    }
+
+    .guide-list {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .guide-card {
+      display: grid;
+      min-height: 92px;
+      grid-template-columns: 44px 1fr;
+      align-items: center;
+      gap: 14px;
+      border: 1px solid rgba(21, 18, 23, 0.08);
+      border-radius: 18px;
+      background: #fff;
+      padding: 16px;
+    }
+
+    .guide-icon {
+      display: grid;
+      width: 44px;
+      height: 44px;
+      place-items: center;
+      border-radius: 14px;
+      background: #FFF0F4;
+      color: var(--red);
+    }
+
+    .guide-icon .icon,
+    .guide-icon svg {
+      width: 21px;
+      height: 21px;
+      stroke-width: 2.3;
+    }
+
+    .guide-card-title {
+      margin-bottom: 4px;
+      color: var(--premium-ink);
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .guide-card-copy {
+      color: rgba(21, 18, 23, 0.56);
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 1.45;
+    }
+
+    .guide-actions {
+      display: grid;
+      gap: 10px;
+    }
+
+    .guide-primary {
+      display: inline-flex;
+      min-height: 54px;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border-radius: var(--pill);
+      background: var(--red);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .guide-secondary {
+      min-height: 46px;
+      border: 1px solid rgba(21, 18, 23, 0.10);
+      border-radius: var(--pill);
+      background: #fff;
+      color: rgba(21, 18, 23, 0.70);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .app:has(#s1.active) {
+      overflow: hidden;
+    }
+
+    body:has(#s1.active) {
+      overflow: hidden;
+    }
+
+    .app-wrap:has(#s1.active) {
+      height: 100dvh;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    #s1 {
+      height: calc(100dvh - var(--header-h));
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    #s1 .landing-hero {
+      height: 100%;
+      min-height: 0;
+    }
+
+    @media (min-width: 520px) {
+      .app-wrap:has(#s1.active) {
+        padding: 28px 0;
+      }
+
+      #s1 {
+        height: calc(100dvh - 114px);
+      }
+    }
+
+    @media (max-height: 760px) {
+      .landing-hero {
+        padding: 18px 22px calc(16px + env(safe-area-inset-bottom, 0px));
+      }
+
+      .eyebrow {
+        margin-bottom: 7px;
+      }
+
+      .landing-title {
+        max-width: 318px;
+        margin-bottom: 10px;
+        font-size: 32px;
+      }
+
+      .landing-copy {
+        margin-bottom: 13px;
+        font-size: 12px;
+        line-height: 1.42;
+      }
+
+      .btn-primary {
+        min-height: 52px;
+      }
+
+      .landing-step-strip {
+        margin-top: 10px;
+      }
+
+      .landing-mini-step {
+        min-height: 62px;
+        border-radius: 16px;
+      }
+    }
+
+    /* Hair profile screen: mirrors the skin analysis quiz rhythm */
+    .profile-progress {
+      display: flex;
+      gap: 6px;
+      padding: 18px 22px 0;
+      background: var(--soft);
+    }
+
+    .profile-bar {
+      height: 4px;
+      flex: 1;
+      border-radius: var(--pill);
+      background: #EFE7E2;
+    }
+
+    .profile-bar.done {
+      background: #3A1627;
+    }
+
+    .profile-bar.active {
+      background: var(--red);
+      opacity: 1;
+    }
+
+    .profile-body {
+      flex: 1;
+      padding: 30px 26px 36px;
+      background: linear-gradient(180deg, #FFFCFA 0%, #FBF7F4 100%);
+    }
+
+    .profile-section {
+      margin-bottom: 14px;
+      color: var(--red);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .profile-q {
+      max-width: 360px;
+      margin-bottom: 8px;
+      color: var(--ink);
+      font-size: 30px;
+      font-weight: 600;
+      line-height: 1.16;
+    }
+
+    .profile-reason {
+      margin-bottom: 30px;
+      color: rgba(21, 18, 23, 0.54);
+      font-size: 13px;
+      font-style: italic;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    .profile-field {
+      margin-bottom: 16px;
+    }
+
+    .profile-field label {
+      display: block;
+      margin-bottom: 8px;
+      color: rgba(21, 18, 23, 0.72);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .profile-input,
+    .profile-phone-group {
+      width: 100%;
+      min-height: 56px;
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      background: #FBF7F4;
+      color: var(--ink);
+      font-size: 15px;
+      font-weight: 600;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .profile-input {
+      padding: 0 16px;
+    }
+
+    .profile-input:focus,
+    .profile-phone-group:focus-within {
+      border-color: rgba(229, 0, 75, 0.48);
+      background: #fff;
+    }
+
+    .profile-input::placeholder,
+    .profile-phone-group input::placeholder {
+      color: rgba(21, 18, 23, 0.32);
+    }
+
+    .profile-phone-group {
+      display: grid;
+      grid-template-columns: 76px 1fr;
+      overflow: hidden;
+    }
+
+    .profile-prefix {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-right: 1.5px solid #E5D6CC;
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .profile-phone-group input {
+      min-width: 0;
+      border: 0;
+      background: transparent;
+      color: var(--ink);
+      padding: 0 16px;
+      outline: none;
+      font: inherit;
+    }
+
+    .profile-note {
+      margin-top: 14px;
+      border-radius: 14px;
+      background: #EFF7F1;
+      padding: 12px 14px;
+      color: rgba(21, 18, 23, 0.62);
+      font-size: 11px;
+      font-weight: 400;
+      line-height: 1.5;
+    }
+
+    .profile-continue {
+      margin-top: 28px;
+      text-transform: uppercase;
+    }
+
+    .profile-options {
+      display: grid;
+      gap: 10px;
+    }
+
+    .profile-option {
+      display: grid;
+      gap: 4px;
+      min-height: 68px;
+      border: 1.5px solid #E5D6CC;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.84);
+      padding: 16px 18px;
+      text-align: left;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .profile-option:hover,
+    .profile-option.selected {
+      border-color: rgba(229, 0, 75, 0.48);
+      background: #FFF0F4;
+    }
+
+    .profile-option-main {
+      color: var(--ink);
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .profile-option-sub {
+      color: rgba(21, 18, 23, 0.54);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.35;
+    }
+
+    .section {
+      padding: 28px 20px 0;
+    }
+
+    .section:last-child { padding-bottom: 30px; }
+
+    .section-label {
+      margin-bottom: 12px;
+      color: rgba(21, 18, 23, 0.52);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .chip-grid {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .analysis-chip {
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(21, 18, 23, 0.10);
+      border-radius: var(--pill);
+      background: #fff;
+      padding: 0 15px;
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .how-title {
+      margin: 2px 0 18px;
+      color: var(--ink);
+      font-size: 24px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .step-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .step-card {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 14px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #fff;
+      padding: 16px;
+    }
+
+    .step-num {
+      display: grid;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--dark);
+      color: #fff;
+      font-size: 17px;
+      font-weight: 600;
+    }
+
+    .step-title {
+      margin-bottom: 4px;
+      color: var(--ink);
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .step-copy {
+      color: rgba(21, 18, 23, 0.58);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.45;
+    }
+
+    /* Shared dark screens */
+    .dark-screen {
+      background: #1f1f1f;
+      color: #fff;
+      padding: 22px 20px calc(24px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .dark-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 40px;
+    }
+
+    .dark-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.52);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .dark-back:hover { color: #fff; }
+
+    .dark-title {
+      max-width: 330px;
+      margin: 0 auto 8px;
+      color: #fff;
+      font-size: 30px;
+      font-weight: 600;
+      line-height: 1.16;
+      text-align: center;
+    }
+
+    .dark-copy {
+      max-width: 340px;
+      margin: 0 auto 32px;
+      color: rgba(255, 255, 255, 0.48);
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.55;
+      text-align: center;
+    }
+
+    .form-field {
+      margin-bottom: 18px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      color: #ff7aa8;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .form-input,
+    .phone-group {
+      width: 100%;
+      min-height: 58px;
+      border: 1.5px solid rgba(255, 255, 255, 0.18);
+      border-radius: 15px;
+      background: rgba(255, 255, 255, 0.06);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      outline: none;
+      transition: border-color 0.18s, background 0.18s;
+    }
+
+    .form-input {
+      padding: 0 16px;
+    }
+
+    .form-input:focus,
+    .phone-group:focus-within {
+      border-color: #ff7aa8;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .form-input::placeholder,
+    .phone-input::placeholder { color: rgba(255, 255, 255, 0.26); }
+
+    .phone-group {
+      display: grid;
+      grid-template-columns: 76px 1fr;
+      overflow: hidden;
+    }
+
+    .phone-prefix {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-right: 1.5px solid rgba(255, 255, 255, 0.14);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .phone-input {
+      min-width: 0;
+      border: 0;
+      background: transparent;
+      color: #fff;
+      padding: 0 16px;
+      outline: none;
+      font: inherit;
+    }
+
+    .consent-row {
+      display: grid;
+      grid-template-columns: 24px 1fr;
+      gap: 12px;
+      align-items: start;
+      margin: 22px 0 70px;
+      color: rgba(255, 255, 255, 0.46);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    .check-box {
+      position: relative;
+      width: 24px;
+      height: 24px;
+      border: 1.5px solid rgba(255, 255, 255, 0.24);
+      border-radius: 7px;
+      background: transparent;
+      appearance: none;
+      cursor: pointer;
+    }
+
+    .check-box:checked {
+      border-color: var(--red);
+      background: var(--red);
+    }
+
+    .check-box:checked::after {
+      content: '';
+      position: absolute;
+      left: 7px;
+      top: 3px;
+      width: 7px;
+      height: 13px;
+      border: solid #fff;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+
+    .tip-list {
+      display: grid;
+      gap: 14px;
+      margin-bottom: 70px;
+    }
+
+    .tip-card {
+      display: grid;
+      grid-template-columns: 62px 1fr;
+      gap: 16px;
+      align-items: center;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.07);
+      padding: 18px;
+    }
+
+    .tip-icon {
+      display: grid;
+      width: 56px;
+      height: 56px;
+      place-items: center;
+      border-radius: 18px;
+      background: rgba(229, 0, 75, 0.14);
+      color: #ff7aa8;
+    }
+
+    .tip-title {
+      margin-bottom: 5px;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .tip-copy {
+      color: rgba(255, 255, 255, 0.50);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    .legal-copy {
+      margin-bottom: 18px;
+      color: rgba(255, 255, 255, 0.42);
+      font-size: 11px;
+      font-weight: 500;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    /* Capture */
+    #s4 {
+      min-height: 100dvh;
+      background: #101010;
+    }
+
+    .capture-screen {
+      position: relative;
+      min-height: 100dvh;
+      overflow: hidden;
+      background: #101010;
+      color: #fff;
+    }
+
+    @media (min-width: 520px) {
+      #s4,
+      .capture-screen { min-height: calc(100dvh - 56px); }
+    }
+
+    .capture-video,
+    .capture-preview-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .capture-video {
+      opacity: 0;
+      transform: scaleX(-1);
+      transition: opacity 0.35s ease;
+    }
+
+    .capture-video.ready { opacity: 1; }
+
+    .capture-preview-img {
+      display: none;
+      z-index: 0;
+      opacity: 0.94;
+    }
+
+    .capture-screen.has-preview .capture-preview-img { display: block; }
+    .capture-screen.has-preview .capture-video { opacity: 0; }
+
+    .capture-shade {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background:
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.72), transparent 30%),
+        linear-gradient(to top, rgba(0, 0, 0, 0.88), transparent 42%);
+      pointer-events: none;
+    }
+
+    .cam-top {
+      position: relative;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: calc(16px + env(safe-area-inset-top, 0px)) 18px 0;
+    }
+
+    .cam-btn {
+      display: inline-flex;
+      min-height: 34px;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: var(--pill);
+      background: rgba(0, 0, 0, 0.34);
+      color: rgba(255, 255, 255, 0.86);
+      padding: 0 12px;
+      font-size: 12px;
+      font-weight: 600;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .cam-logo {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #fff;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+    }
+
+    .capture-guide {
+      position: relative;
+      z-index: 3;
+      width: calc(100% - 40px);
+      margin: 18px auto 0;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 18px;
+      background: rgba(0, 0, 0, 0.34);
+      padding: 13px 14px;
+      color: rgba(255, 255, 255, 0.78);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    .capture-guide-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .quality-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: rgba(255, 255, 255, 0.88);
+    }
+
+    .quality-pill::before {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+
+    .capture-guide-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .capture-guide-grid span {
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 9px 5px;
+      font-size: 10px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .hair-frame-wrap {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .hair-frame {
+      position: relative;
+      width: min(70vw, 250px);
+      height: min(86vw, 330px);
+      border: 2px solid rgba(255, 255, 255, 0.32);
+      border-radius: 48% 48% 44% 44%;
+      transition: border-color 0.25s;
+    }
+
+    .hair-frame.scanning {
+      border-color: rgba(229, 0, 75, 0.84);
+    }
+
+    .hair-frame.ready {
+      border-color: rgba(22, 163, 74, 0.88);
+    }
+
+    .hair-frame::before {
+      content: '';
+      position: absolute;
+      left: 8%;
+      right: 8%;
+      top: 18%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(229, 0, 75, 0.95), transparent);
+      animation: scanLine 2.3s ease-in-out infinite;
+    }
+
+    @keyframes scanLine {
+      0% { top: 16%; opacity: 0; }
+      12% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { top: 86%; opacity: 0; }
+    }
+
+    .hair-corner {
+      position: absolute;
+      width: 26px;
+      height: 26px;
+      border-color: rgba(255, 255, 255, 0.78);
+      border-style: solid;
+      border-width: 0;
+    }
+
+    .hair-corner.tl { top: -2px; left: -2px; border-top-width: 3px; border-left-width: 3px; border-radius: 11px 0 0 0; }
+    .hair-corner.tr { top: -2px; right: -2px; border-top-width: 3px; border-right-width: 3px; border-radius: 0 11px 0 0; }
+    .hair-corner.bl { bottom: -2px; left: -2px; border-bottom-width: 3px; border-left-width: 3px; border-radius: 0 0 0 11px; }
+    .hair-corner.br { bottom: -2px; right: -2px; border-bottom-width: 3px; border-right-width: 3px; border-radius: 0 0 11px 0; }
+
+    .capture-status {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 138px;
+      z-index: 4;
+      display: flex;
+      justify-content: center;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: var(--pill);
+      background: rgba(0, 0, 0, 0.44);
+      padding: 10px 16px;
+      color: rgba(255, 255, 255, 0.86);
+      font-size: 12px;
+      font-weight: 600;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--warning);
+      animation: blink 1s ease-in-out infinite;
+    }
+
+    .status-pill.ready .status-dot {
+      background: var(--success);
+      animation: none;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.25; }
+    }
+
+    .capture-actions {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 5;
+      display: grid;
+      gap: 14px;
+      padding: 0 22px calc(20px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .capture-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 26px;
+    }
+
+    .capture-main {
+      display: grid;
+      width: 80px;
+      height: 80px;
+      place-items: center;
+      border: 4px solid rgba(255, 255, 255, 0.28);
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.96);
+    }
+
+    .capture-main span {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: var(--red);
+    }
+
+    .preview-controls {
+      display: none;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .preview-controls .btn-primary,
+    .preview-controls .btn-ghost {
+      width: 100%;
+      min-height: 58px;
+      padding: 0 14px;
+      text-align: center;
+      line-height: 1.2;
+    }
+
+    .capture-screen.has-preview .capture-row,
+    .capture-screen.has-preview .capture-guide,
+    .capture-screen.has-preview .hair-frame-wrap { display: none; }
+
+    .capture-screen.has-preview .preview-controls { display: grid; }
+    .capture-screen.has-preview .capture-status { bottom: 98px; }
+
+    /* Analyzing */
+    .analyzing-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 28px;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(229, 0, 75, 0.06), transparent 34%),
+        linear-gradient(180deg, #FFFCFA 0%, #F7F0EC 100%);
+    }
+
+    .ring-wrap {
+      position: relative;
+      width: 132px;
+      height: 132px;
+      margin-bottom: 32px;
+    }
+
+    .ring,
+    .ring-inner {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 3px solid #F0E0E5;
+      border-top-color: var(--red);
+      animation: spin 1.1s linear infinite;
+    }
+
+    .ring-inner {
+      inset: 12px;
+      border-width: 2px;
+      border-color: #FDE0E8;
+      border-bottom-color: var(--red);
+      opacity: 0.5;
+      animation-duration: 2s;
+      animation-direction: reverse;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .ring-pct {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: var(--red);
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .analysis-title {
+      max-width: 330px;
+      margin-bottom: 6px;
+      color: var(--ink);
+      font-size: 25px;
+      font-weight: 600;
+      line-height: 1.12;
+      text-align: center;
+    }
+
+    .analysis-copy {
+      margin-bottom: 28px;
+      color: rgba(21, 18, 23, 0.56);
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .analysis-steps {
+      width: 100%;
+      max-width: 300px;
+      margin-bottom: 32px;
+      border: 1px solid rgba(21, 18, 23, 0.07);
+      border-radius: 24px;
+      background: #fff;
+      padding: 8px 18px;
+    }
+
+    .analysis-step {
+      display: flex;
+      min-height: 58px;
+      gap: 12px;
+      align-items: center;
+      border-bottom: 1px solid rgba(21, 18, 23, 0.06);
+      opacity: 0.42;
+      transition: opacity 0.25s;
+    }
+
+    .analysis-step:last-child { border-bottom: 0; }
+    .analysis-step.on { opacity: 1; }
+    .analysis-step.done { opacity: 0.86; }
+
+    .analysis-step-icon {
+      width: 34px;
+      height: 34px;
+      display: flex;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: #FFF0F4;
+      color: var(--red);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .analysis-step.done .analysis-step-icon,
+    .analysis-step.on .analysis-step-icon {
+      background: var(--dark);
+      color: #fff;
+    }
+
+    .analysis-step-text {
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .analysis-fact {
+      max-width: 320px;
+      border: 1px solid rgba(21, 18, 23, 0.06);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.78);
+      padding: 16px;
+      text-align: center;
+    }
+
+    .analysis-fact-label {
+      margin-bottom: 6px;
+      color: var(--red);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .analysis-fact-text {
+      color: rgba(21, 18, 23, 0.62);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    /* Report */
+    .report-body {
+      padding: 16px 16px 26px;
+      background: var(--soft);
+    }
+
+    .score-card,
+    .photo-map,
+    .metric-card,
+    .plan-card,
+    .colour-card,
+    .routine-card {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: #fff;
+    }
+
+    .score-card {
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .score-row {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .score-ring {
+      position: relative;
+      flex: 0 0 auto;
+      width: 96px;
+      height: 96px;
+    }
+
+    .score-ring svg { display: block; }
+
+    .score-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .score-num {
+      color: var(--ink);
+      font-size: 30px;
+      font-weight: 600;
+      line-height: 1;
+    }
+
+    .score-total {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .score-label {
+      margin-bottom: 4px;
+      color: rgba(21, 18, 23, 0.50);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .score-verdict {
+      margin-bottom: 8px;
+      color: var(--ink);
+      font-size: 20px;
+      font-weight: 600;
+      line-height: 1.15;
+    }
+
+    .score-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .score-tag {
+      border: 1px solid var(--line);
+      border-radius: var(--pill);
+      background: var(--cream);
+      padding: 5px 10px;
+      color: rgba(21, 18, 23, 0.62);
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .report-section-title {
+      margin: 20px 2px 12px;
+      color: var(--ink);
+      font-size: 17px;
+      font-weight: 600;
+    }
+
+    .photo-map {
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .map-stage {
+      position: relative;
+      min-height: 350px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 30%, rgba(229, 0, 75, 0.08), transparent 28%),
+        linear-gradient(180deg, #F5EFEA, #E9DDD4);
+    }
+
+    .map-img {
+      width: 100%;
+      height: 350px;
+      display: none;
+      object-fit: cover;
+      object-position: center top;
+    }
+
+    .map-img[src] { display: block; }
+
+    .map-illustration {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+    }
+
+    .map-img[src] + .map-illustration { display: none; }
+
+    .map-face-svg {
+      width: 230px;
+      height: 304px;
+      opacity: 0.95;
+    }
+
+    .pin {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pin.right { flex-direction: row-reverse; }
+
+    .pin-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border-radius: var(--pill);
+      padding: 6px 10px;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .pin-score {
+      font-size: 10px;
+      opacity: 0.86;
+    }
+
+    .pin-line {
+      width: 18px;
+      height: 1.5px;
+      background: currentColor;
+      opacity: 0.62;
+    }
+
+    .pin-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .pin.danger { color: var(--danger); }
+    .pin.warning { color: var(--warning); }
+    .pin.good { color: var(--success); }
+    .pin.danger .pin-label { background: var(--danger); }
+    .pin.warning .pin-label { background: var(--warning); }
+    .pin.good .pin-label { background: var(--success); }
+
+    .map-legend {
+      display: flex;
+      justify-content: center;
+      gap: 13px;
+      flex-wrap: wrap;
+      padding: 12px 12px 14px;
+      background: #fff;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: rgba(21, 18, 23, 0.52);
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .metric-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .metric-card {
+      padding: 16px;
+    }
+
+    .metric-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .metric-name {
+      color: var(--ink);
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .metric-sev {
+      border-radius: var(--pill);
+      padding: 4px 9px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .metric-sev.danger { background: rgba(229, 0, 75, 0.08); color: var(--danger); }
+    .metric-sev.warning { background: rgba(249, 115, 22, 0.10); color: var(--warning); }
+    .metric-sev.good { background: rgba(22, 163, 74, 0.10); color: var(--success); }
+
+    .metric-bar {
+      height: 6px;
+      overflow: hidden;
+      border-radius: var(--pill);
+      background: #EFE7E2;
+      margin-bottom: 8px;
+    }
+
+    .metric-fill {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      transition: width 1.1s ease;
+    }
+
+    .metric-fill.danger { background: var(--danger); }
+    .metric-fill.warning { background: var(--warning); }
+    .metric-fill.good { background: var(--success); }
+
+    .metric-score {
+      margin-bottom: 7px;
+      color: rgba(21, 18, 23, 0.68);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .metric-copy {
+      color: rgba(21, 18, 23, 0.58);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.55;
+    }
+
+    .plan-card {
+      margin-top: 16px;
+      padding: 16px;
+      background: linear-gradient(180deg, #fff, #FFF8FA);
+    }
+
+    .plan-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .plan-kicker {
+      margin-bottom: 4px;
+      color: var(--red);
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .plan-title {
+      color: var(--ink);
+      font-size: 19px;
+      font-weight: 600;
+      line-height: 1.1;
+    }
+
+    .plan-badge {
+      flex: 0 0 auto;
+      align-self: flex-start;
+      border-radius: var(--pill);
+      background: #F8E8EE;
+      color: var(--red);
+      padding: 7px 10px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .plan-step {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(21, 18, 23, 0.07);
+    }
+
+    .plan-step:last-child { border-bottom: 0; }
+
+    .plan-num {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      border-radius: 50%;
+      background: #FFF0F4;
+      color: var(--red);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .plan-step strong {
+      display: block;
+      color: var(--ink);
+      font-size: 14px;
+      line-height: 1.2;
+    }
+
+    .plan-step span {
+      display: block;
+      margin-top: 4px;
+      color: rgba(21, 18, 23, 0.58);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .colour-card {
+      margin-top: 16px;
+      padding: 16px;
+    }
+
+    .colour-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .colour-title {
+      color: var(--ink);
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .colour-rating {
+      border-radius: var(--pill);
+      background: rgba(22, 163, 74, 0.10);
+      color: var(--success);
+      padding: 6px 9px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .colour-preview {
+      display: grid;
+      grid-template-columns: 92px 1fr;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .mini-head {
+      position: relative;
+      width: 92px;
+      height: 112px;
+      border-radius: 22px;
+      background: #F5EFEA;
+      overflow: hidden;
+    }
+
+    .mini-head svg {
+      position: absolute;
+      inset: 7px 10px 0;
+      width: 72px;
+      height: 100px;
+    }
+
+    .colour-copy {
+      color: rgba(21, 18, 23, 0.58);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.55;
+    }
+
+    .swatch-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .colour-swatch {
+      width: 30px;
+      height: 30px;
+      border: 2px solid #fff;
+      border-radius: 50%;
+    }
+
+    .report-cta {
+      margin-top: 18px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #151217, #3A1627);
+      padding: 16px;
+    }
+
+    .report-cta-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .report-cta-copy {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .report-cta-title {
+      margin-bottom: 3px;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .report-cta-sub {
+      color: rgba(255, 255, 255, 0.50);
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    .report-cta-btn {
+      flex: 0 0 auto;
+      min-height: 44px;
+      border-radius: 13px;
+      background: var(--red);
+      color: #fff;
+      padding: 0 15px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* Routine */
+    .routine-head {
+      position: relative;
+      flex: 0 0 auto;
+      overflow: hidden;
+      padding: 22px 20px 36px;
+      background: linear-gradient(145deg, #3A1627 0%, #151217 100%);
+      color: #fff;
+    }
+
+    .routine-head::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -1px;
+      height: 22px;
+      border-radius: 22px 22px 0 0;
+      background: var(--soft);
+      z-index: 0;
+    }
+
+    .routine-title {
+      position: relative;
+      z-index: 2;
+      max-width: 310px;
+      margin: 0 0 4px;
+      color: #fff;
+      font-size: 27px;
+      font-weight: 600;
+      line-height: 1.14;
+      letter-spacing: 0;
+    }
+
+    .routine-sub {
+      position: relative;
+      z-index: 2;
+      max-width: 320px;
+      color: rgba(255, 255, 255, 0.60);
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 1.5;
+    }
+
+    .routine-body {
+      padding: 20px 16px 34px;
+      background: #FFFCFA;
+    }
+
+    .routine-chip-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .routine-chip-row span {
+      border-radius: var(--pill);
+      background: #F5EFEA;
+      color: rgba(21, 18, 23, 0.62);
+      padding: 7px 10px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .routine-label {
+      margin: 18px 0 12px;
+      color: rgba(21, 18, 23, 0.52);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .routine-card {
+      display: grid;
+      grid-template-columns: 76px 1fr;
+      gap: 14px;
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+
+    .product-img {
+      display: grid;
+      width: 76px;
+      height: 76px;
+      place-items: center;
+      position: relative;
+      overflow: hidden;
+      padding: 6px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fff;
+      color: #3A1627;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .product-img span {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      max-width: 60px;
+      margin: auto;
+      place-items: center;
+      line-height: 1.15;
+    }
+
+    .product-img img {
+      position: relative;
+      z-index: 1;
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: 12px;
+      background: #fff;
+      object-fit: contain;
+      object-position: center;
+    }
+
+    .product-step {
+      margin-bottom: 3px;
+      color: var(--red);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .product-name {
+      margin-bottom: 4px;
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+
+    .product-why {
+      margin-bottom: 9px;
+      color: rgba(21, 18, 23, 0.56);
+      font-size: 11px;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    .product-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .price {
+      color: var(--ink);
+      font-size: 15px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .price-old {
+      margin-left: 4px;
+      color: rgba(21, 18, 23, 0.38);
+      font-size: 11px;
+      font-weight: 600;
+      text-decoration: line-through;
+    }
+
+    .add-btn {
+      min-width: 92px;
+      min-height: 34px;
+      border-radius: 10px;
+      background: var(--red);
+      color: #fff;
+      padding: 0 14px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .add-btn.added { background: var(--success); }
+
+    .routine-total {
+      position: sticky;
+      bottom: 12px;
+      z-index: 9;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 16px;
+      border-radius: 18px;
+      background: var(--dark);
+      padding: 16px 18px;
+    }
+
+    .routine-total span:first-child {
+      color: rgba(255, 255, 255, 0.56);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .routine-total span:last-child {
+      color: #fff;
+      font-size: 21px;
+      font-weight: 600;
+    }
+
+    .routine-actions {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    /* Modal */
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.54);
+      padding: 18px;
+    }
+
+    .modal.open { display: flex; }
+
+    .modal-card {
+      width: min(100%, 430px);
+      border-radius: 24px;
+      background: #fff;
+      padding: 20px 18px 18px;
+      animation: modalUp 0.24s ease forwards;
+    }
+
+    @keyframes modalUp {
+      from { transform: translateY(24px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .modal-kicker {
+      margin-bottom: 5px;
+      color: var(--red);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .modal-title {
+      color: var(--ink);
+      font-size: 22px;
+      font-weight: 600;
+      line-height: 1.18;
+      letter-spacing: 0;
+    }
+
+    .modal-close {
+      display: grid;
+      flex: 0 0 auto;
+      width: 38px;
+      height: 38px;
+      place-items: center;
+      border-radius: 50%;
+      background: #F5EFEA;
+      color: var(--ink);
+    }
+
+    .modal-options {
+      display: grid;
+      gap: 10px;
+      margin: 18px 0;
+    }
+
+    .modal-option {
+      display: grid;
+      grid-template-columns: 18px 1fr;
+      gap: 12px;
+      align-items: start;
+      border: 1.5px solid var(--line);
+      border-radius: 16px;
+      background: #fff;
+      padding: 14px;
+      text-align: left;
+    }
+
+    .modal-option.active {
+      border-color: rgba(229, 0, 75, 0.48);
+      background: #FFF0F4;
+    }
+
+    .radio-dot {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(21, 18, 23, 0.20);
+      border-radius: 50%;
+      margin-top: 1px;
+    }
+
+    .modal-option.active .radio-dot {
+      border: 5px solid var(--red);
+    }
+
+    .modal-option strong {
+      display: block;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.25;
+    }
+
+    .modal-option span {
+      display: block;
+      margin-top: 3px;
+      color: rgba(21, 18, 23, 0.56);
+      font-size: 11px;
+      font-weight: 400;
+      line-height: 1.45;
+    }
+
+    .modal-card > .btn-primary {
+      min-height: 52px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 28px;
+      z-index: 700;
+      transform: translateX(-50%) translateY(80px);
+      border-radius: var(--pill);
+      background: var(--dark);
+      color: #fff;
+      padding: 11px 18px;
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.25s, opacity 0.25s;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* Shared UI polish for the Avon analysis SDK */
+    .sdk-header {
+      background: rgba(255, 252, 250, 0.94);
+      border-bottom-color: rgba(21, 18, 23, 0.08);
+    }
+
+    .sdk-logo {
+      font-size: 21px;
+      letter-spacing: 0.12em;
+    }
+
+    .sdk-label {
+      color: rgba(21, 18, 23, 0.50);
+      font-weight: 600;
+      letter-spacing: 0.12em;
+    }
+
+    .btn-primary {
+      min-height: 58px;
+      border-radius: var(--pill);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .landing-mini-step {
+      border-color: rgba(255, 255, 255, 0.26);
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .capture-card,
+    .profile-option,
+    .score-card,
+    .photo-map,
+    .metric-card,
+    .plan-card,
+    .colour-card,
+    .routine-card {
+      border-color: rgba(21, 18, 23, 0.08);
+    }
+
+    .score-card,
+    .photo-map,
+    .metric-card,
+    .plan-card,
+    .colour-card,
+    .routine-card,
+    .routine-total,
+    .report-cta {
+      border-radius: 22px;
+    }
+
+    .report-section-title,
+    .score-verdict,
+    .plan-title,
+    .routine-title {
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+
+    .report-section-title {
+      font-size: 20px;
+    }
+
+    .score-tag,
+    .routine-chip-row span {
+      border: 1px solid rgba(21, 18, 23, 0.08);
+      background: #F5EFEA;
+      font-weight: 600;
+    }
+
+    .report-cta,
+    .routine-total {
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .report-cta-btn,
+    .add-btn {
+      min-height: 38px;
+      border-radius: var(--pill);
+      font-weight: 600;
+    }
+
+    .btn-primary,
+    .btn-dark,
+    .btn-ghost,
+    .cam-btn,
+    .dark-back,
+    .report-cta-btn,
+    .add-btn {
+      border-radius: var(--pill);
+    }
+
+    .report-body,
+    .routine-body {
+      padding-bottom: calc(34px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* Skin analysis parity fixes */
+    .sdk-back,
+    .sdk-home {
+      font-family: var(--fb);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .sdk-logo,
+    .landing-title,
+    .profile-q,
+    .analysis-title,
+    .score-num,
+    .score-verdict,
+    .report-section-title,
+    .plan-title,
+    .routine-title,
+    .product-name {
+      font-family: var(--fh);
+    }
+
+    .btn-primary:hover {
+      transform: none;
+    }
+
+    .eyebrow {
+      font-weight: 600;
+    }
+
+    .landing-title {
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+
+    .landing-copy {
+      font-weight: 400;
+    }
+
+    .profile-section,
+    .profile-field label,
+    .profile-prefix {
+      font-weight: 600;
+    }
+
+    .profile-q {
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+
+    .profile-reason,
+    .profile-option-sub,
+    .tip-copy,
+    .step-copy,
+    .metric-copy,
+    .plan-step span,
+    .colour-copy,
+    .product-why,
+    .modal-option span {
+      font-weight: 400;
+    }
+
+    .profile-option-main {
+      font-weight: 600;
+    }
+
+    .tip-title,
+    .step-title,
+    .metric-name,
+    .colour-title,
+    .report-cta-title,
+    .product-name,
+    .price {
+      font-weight: 600;
+    }
+
+    .modal-option strong {
+      font-weight: 600;
+    }
+
+    .profile-input,
+    .profile-phone-group,
+    .profile-phone-group input,
+    .form-input,
+    .phone-group,
+    .phone-input {
+      font-weight: 600;
+    }
+
+    .cam-btn {
+      font-weight: 600;
+    }
+
+    .capture-guide-top,
+    .capture-guide-grid span,
+    .analysis-chip {
+      font-weight: 600;
+    }
+
+    .section-label,
+    .how-title {
+      font-weight: 600;
+    }
+
+    .score-label,
+    .metric-sev,
+    .metric-score,
+    .plan-step strong,
+    .product-step,
+    .price-old,
+    .routine-chip-row span {
+      font-weight: 600;
+    }
+
+    .score-tag {
+      font-size: 12px;
+    }
+
+    .report-cta-sub,
+    .routine-sub {
+      font-weight: 400;
+    }
+
+    .routine-label {
+      font-weight: 600;
+    }
+
+    .routine-total span:first-child {
+      font-weight: 600;
+    }
+
+    /* Refined bottom report CTA */
+    .report-body {
+      padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .score-card {
+      padding: 18px;
+      border-radius: 20px;
+    }
+
+    .score-row {
+      gap: 16px;
+    }
+
+    .score-ring,
+    .score-ring svg {
+      width: 88px;
+      height: 88px;
+    }
+
+    .score-num {
+      font-size: 28px;
+      font-weight: 600;
+    }
+
+    .score-total {
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .score-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+    }
+
+    .score-verdict {
+      margin-bottom: 9px;
+      font-size: 19px;
+      font-weight: 600;
+      line-height: 1.18;
+    }
+
+    .score-tag {
+      padding: 6px 11px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .report-section-title {
+      margin: 20px 0 12px;
+      font-size: 19px;
+      font-weight: 600;
+    }
+
+    .pin-label {
+      padding: 6px 10px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .legend-item {
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    /* Enhanced hair report layout */
+    .report-body {
+      padding: 18px 16px calc(46px + env(safe-area-inset-bottom, 0px));
+      background:
+        linear-gradient(180deg, #FFFCFA 0%, #FBF7F4 58%, #FFFCFA 100%);
+    }
+
+    .score-card {
+      margin-bottom: 22px;
+      border-color: rgba(21, 18, 23, 0.07);
+      border-radius: 24px;
+      padding: 18px;
+    }
+
+    .score-row {
+      align-items: center;
+      gap: 16px;
+    }
+
+    .score-info {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .score-ring,
+    .score-ring svg {
+      width: 86px;
+      height: 86px;
+    }
+
+    .score-num {
+      font-size: 27px;
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+
+    .score-total {
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .score-label {
+      margin-bottom: 6px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+    }
+
+    .score-verdict {
+      margin-bottom: 10px;
+      font-size: 20px;
+      font-weight: 600;
+      line-height: 1.16;
+      letter-spacing: 0;
+    }
+
+    .score-tags {
+      gap: 7px;
+    }
+
+    .score-tag {
+      padding: 6px 10px;
+      border-color: rgba(21, 18, 23, 0.08);
+      background: #F7F1ED;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .score-summary {
+      margin-top: 10px;
+      color: rgba(21, 18, 23, 0.56);
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 1.45;
+    }
+
+    .report-section-head {
+      margin: 24px 2px 12px;
+    }
+
+    .report-section-title {
+      margin: 0;
+      color: var(--premium-ink);
+      font-size: 21px;
+      font-weight: 600;
+      line-height: 1.12;
+      letter-spacing: 0;
+    }
+
+    .report-section-head p {
+      margin-top: 6px;
+      color: rgba(21, 18, 23, 0.56);
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 1.45;
+    }
+
+    .photo-map {
+      border-color: rgba(21, 18, 23, 0.07);
+      border-radius: 24px;
+    }
+
+    .map-stage {
+      min-height: 0;
+      height: clamp(360px, 72vw, 430px);
+      background:
+        radial-gradient(circle at 50% 28%, rgba(229, 0, 75, 0.08), transparent 28%),
+        linear-gradient(180deg, #F4EAE4, #E9DDD4);
+    }
+
+    .map-stage::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background:
+        linear-gradient(180deg, rgba(21, 18, 23, 0.12), transparent 24%, transparent 76%, rgba(21, 18, 23, 0.10)),
+        radial-gradient(circle at 50% 48%, transparent 0%, transparent 48%, rgba(255, 255, 255, 0.14) 100%);
+      pointer-events: none;
+    }
+
+    .map-img {
+      position: relative;
+      z-index: 0;
+      height: 100%;
+      object-position: center 68%;
+    }
+
+    .map-illustration {
+      z-index: 0;
+    }
+
+    .pin {
+      z-index: 2;
+      gap: 7px;
+    }
+
+    .pin-label {
+      min-height: 36px;
+      padding: 0 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .pin-score {
+      font-size: 11px;
+      font-weight: 600;
+      opacity: 0.9;
+    }
+
+    .pin-line {
+      width: 22px;
+      opacity: 0.72;
+    }
+
+    .pin-dot {
+      width: 8px;
+      height: 8px;
+    }
+
+    .map-legend {
+      gap: 16px;
+      border-top: 1px solid rgba(21, 18, 23, 0.06);
+      padding: 14px 12px 16px;
+      background: rgba(255, 255, 255, 0.96);
+    }
+
+    .legend-item {
+      color: rgba(21, 18, 23, 0.58);
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .metric-list {
+      gap: 12px;
+    }
+
+    .metric-card {
+      border-color: rgba(21, 18, 23, 0.07);
+      border-radius: 20px;
+      padding: 16px;
+    }
+
+    .metric-name {
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .metric-sev {
+      padding: 5px 10px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+    }
+
+    .metric-score {
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .metric-copy {
+      color: rgba(21, 18, 23, 0.58);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .report-cta {
+      margin-top: 22px;
+      padding: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      border-radius: 20px;
+      background:
+        radial-gradient(circle at 12% 0%, rgba(229, 0, 75, 0.24), transparent 44%),
+        linear-gradient(135deg, #151217 0%, #2b1320 55%, #42152a 100%);
+      overflow: hidden;
+    }
+
+    .report-cta-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 14px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .report-cta-copy {
+      display: grid;
+      gap: 5px;
+    }
+
+    .report-cta-title {
+      margin-bottom: 0;
+      font-size: 17px;
+      font-weight: 600;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    .report-cta-sub {
+      max-width: 245px;
+      color: rgba(255, 255, 255, 0.62);
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 1.45;
+    }
+
+    .report-cta-btn {
+      display: inline-flex;
+      min-height: 46px;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 0 18px;
+      border-radius: var(--pill);
+      background: var(--red);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0;
+      line-height: 1;
+      transition: background 0.16s ease, transform 0.16s ease;
+    }
+
+    .report-cta-btn:hover {
+      background: var(--red-hover);
+      transform: translateY(-1px);
+    }
+
+    .report-cta-btn span {
+      font-size: 15px;
+      line-height: 1;
+    }
+
+    @media (max-width: 390px) {
+      .landing-title { font-size: 32px; }
+      .dark-title { font-size: 26px; }
+      .capture-guide-grid { grid-template-columns: 1fr; }
+      .pin-label { font-size: 9px; padding: 5px 8px; }
+      .routine-card { gap: 10px; }
+      .product-bottom {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 370px) {
+      .report-body {
+        padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+      }
+
+      .report-cta-row {
+        grid-template-columns: 1fr;
+      }
+
+      .report-cta-sub {
+        max-width: none;
+      }
+
+      .report-cta-btn {
+        width: 100%;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    :root button[class],
+    :root button[class] :is(span, strong, small, div) {
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-wrap">
+    <div class="app">
+      <header class="sdk-header" id="sdk-header">
+        <button class="sdk-back" onclick="headerBack()">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
+          Back
+        </button>
+        <a class="sdk-logo" href="homepage.html">AVON</a>
+        <span class="sdk-spacer" aria-hidden="true"></span>
+      </header>
+
+      <main>
+        <section class="screen active" id="s1">
+          <div class="landing-hero">
+            <div class="landing-hero__content">
+              <div class="eyebrow">AI Hair Analysis</div>
+              <h1 class="landing-title">Understand your <span>hair</span></h1>
+              <p class="landing-copy">Scan your hair and get a clear Avon routine for your top concerns.</p>
+              <button class="btn-primary" onclick="goTo('s3')">
+                Scan My Hair
+                <svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen" id="s2">
+          <div class="profile-progress" id="profile-progress"></div>
+          <div class="profile-body" id="profile-body"></div>
+        </section>
+
+        <section class="screen guide-screen" id="s3">
+          <div class="guide-body">
+            <div class="guide-kicker">Before You Scan</div>
+            <h2 class="guide-title">Set up your hair scan</h2>
+            <p class="guide-copy">A clear hair photo helps the analysis read density, scalp visibility, frizz, damage, and split ends more accurately.</p>
+
+            <div class="guide-list" aria-label="Hair scan instructions">
+              <div class="guide-card">
+                <div class="guide-icon">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="M4 20c2-5 3-9 3-13"/><path d="M20 20c-2-5-3-9-3-13"/><path d="M7 7c1.5-2 3-3 5-3s3.5 1 5 3"/><path d="M8 14h8"/></svg>
+                </div>
+                <div>
+                  <div class="guide-card-title">Go natural</div>
+                  <div class="guide-card-copy">Keep hair product-light and show the crown, hairline, lengths, scalp, or ends clearly.</div>
+                </div>
+              </div>
+              <div class="guide-card">
+                <div class="guide-icon">
+                  <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" /></svg>
+                </div>
+                <div>
+                  <div class="guide-card-title">Find good lighting</div>
+                  <div class="guide-card-copy">Use natural light or a well-lit room. Avoid harsh shadows and backlight.</div>
+                </div>
+              </div>
+              <div class="guide-card">
+                <div class="guide-icon">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+                </div>
+                <div>
+                  <div class="guide-card-title">Align your hair</div>
+                  <div class="guide-card-copy">Keep the concern area inside the frame and hold the camera steady.</div>
+                </div>
+              </div>
+            </div>
+            <div class="guide-actions">
+              <button class="guide-primary" onclick="goToCapture()">
+                Open Camera
+                <svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen" id="s4">
+          <div class="capture-screen" id="capture-screen">
+            <video class="capture-video" id="camera-video" autoplay muted playsinline></video>
+            <img class="capture-preview-img" id="capture-preview" alt="Captured hair photo preview" />
+            <div class="capture-shade"></div>
+            <div class="cam-top">
+              <button class="cam-btn" onclick="goTo('s3')">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
+                Back
+              </button>
+              <div class="cam-logo">AVON</div>
+            </div>
+            <div class="capture-guide">
+              <div class="capture-guide-top">
+                <span>Capture quality</span>
+                <span class="quality-pill">Ready</span>
+              </div>
+              <div class="capture-guide-grid">
+                <span>Hair visible</span>
+                <span>Steady frame</span>
+                <span>Good light</span>
+              </div>
+            </div>
+            <div class="hair-frame-wrap">
+              <div class="hair-frame scanning" id="hair-frame">
+                <span class="hair-corner tl"></span>
+                <span class="hair-corner tr"></span>
+                <span class="hair-corner bl"></span>
+                <span class="hair-corner br"></span>
+              </div>
+            </div>
+            <div class="capture-status">
+              <div class="status-pill" id="capture-status">
+                <span class="status-dot"></span>
+                <span id="capture-status-text">Position your hair inside the frame</span>
+              </div>
+            </div>
+            <div class="capture-actions">
+              <div class="capture-row">
+                <button class="capture-main" onclick="capturePhoto()" aria-label="Take hair photo"><span></span></button>
+              </div>
+              <div class="preview-controls">
+                <button class="btn-ghost" onclick="retakePhoto()">Retake</button>
+                <button class="btn-primary" onclick="startAnalyzing('s2')">Continue</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen" id="s5">
+          <div class="analyzing-wrap">
+            <div class="ring-wrap">
+              <div class="ring"></div>
+              <div class="ring-inner"></div>
+              <div class="ring-pct" id="analysis-pct">0%</div>
+            </div>
+            <h2 class="analysis-title">Reading your hair story...</h2>
+            <p class="analysis-copy">This takes about 5 seconds</p>
+            <div class="analysis-steps">
+              <div class="analysis-step" id="analysis-step-0"><div class="analysis-step-icon">01</div><div class="analysis-step-text">Mapping hairline and crown</div></div>
+              <div class="analysis-step" id="analysis-step-1"><div class="analysis-step-icon">02</div><div class="analysis-step-text">Checking scalp visibility</div></div>
+              <div class="analysis-step" id="analysis-step-2"><div class="analysis-step-icon">03</div><div class="analysis-step-text">Detecting frizz, damage, and split ends</div></div>
+              <div class="analysis-step" id="analysis-step-3"><div class="analysis-step-icon">04</div><div class="analysis-step-text">Building your Avon hair plan</div></div>
+            </div>
+            <div class="analysis-fact">
+              <div class="analysis-fact-label">Did You Know?</div>
+              <div class="analysis-fact-text">Healthy scalp care and regular damage repair can help improve visible shine, density, and colour readiness over time.</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen" id="s6">
+          <div class="report-body">
+            <div class="score-card">
+              <div class="score-row">
+                <div class="score-ring">
+                  <svg width="96" height="96" viewBox="0 0 96 96">
+                    <circle cx="48" cy="48" r="40" fill="none" stroke="#F0E8E0" stroke-width="7" />
+                    <circle id="score-arc" cx="48" cy="48" r="40" fill="none" stroke="#E5004B" stroke-width="7" stroke-linecap="round" stroke-dasharray="251" stroke-dashoffset="251" transform="rotate(-90 48 48)" />
+                  </svg>
+                  <div class="score-center">
+                    <span class="score-num" id="score-num">0</span>
+                    <span class="score-total">/100</span>
+                  </div>
+                </div>
+                <div class="score-info">
+                  <div class="score-label">Overall Hair Score</div>
+                  <div class="score-verdict" id="score-verdict">Balanced, repair-focused</div>
+                  <div class="score-tags">
+                    <span class="score-tag">Medium Density</span>
+                    <span class="score-tag">Dry Lengths</span>
+                    <span class="score-tag">Colour Ready</span>
+                  </div>
+                  <p class="score-summary">Focus on dry lengths and split ends while keeping scalp and density steady.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="report-section-head">
+              <div class="report-section-title">Concern Map</div>
+              <p>Key areas from your scan, grouped by attention level.</p>
+            </div>
+            <div class="photo-map">
+              <div class="map-stage">
+                <img class="map-img" id="report-photo" alt="Hair analysis concern map" />
+                <div class="map-illustration" aria-hidden="true">
+                  <svg class="map-face-svg" viewBox="0 0 230 304">
+                    <ellipse cx="115" cy="99" rx="70" ry="88" fill="#3A1627" />
+                    <path d="M45 102c0-54 30-82 70-82s70 28 70 82c-17-28-39-38-70-38s-53 10-70 38Z" fill="#4B2034" />
+                    <path d="M53 105c-26 48-24 116-6 140 17-32 20-76 13-116 6-11 14-20 25-27-12-3-23-3-32 3Z" fill="#27141D" />
+                    <path d="M177 105c26 48 24 116 6 140-17-32-20-76-13-116-6-11-14-20-25-27 12-3 23-3 32 3Z" fill="#27141D" />
+                    <ellipse cx="115" cy="135" rx="52" ry="62" fill="#E8B18C" />
+                    <path d="M82 132c10-7 20-7 30 0M118 132c10-7 20-7 30 0" stroke="#2A150D" stroke-width="4" stroke-linecap="round" />
+                    <path d="M99 164c10 9 22 9 32 0" stroke="#9E5B4E" stroke-width="3" stroke-linecap="round" fill="none" />
+                  </svg>
+                </div>
+                <div class="pin danger" style="top: 12%; left: 2%;">
+                  <div class="pin-label">Damage <span class="pin-score">46</span></div>
+                  <div class="pin-line"></div>
+                  <div class="pin-dot"></div>
+                </div>
+                <div class="pin warning" style="top: 36%; left: 2%;">
+                  <div class="pin-label">Frizz <span class="pin-score">52</span></div>
+                  <div class="pin-line"></div>
+                  <div class="pin-dot"></div>
+                </div>
+                <div class="pin right good" style="top: 15%; right: 2%;">
+                  <div class="pin-label">Density <span class="pin-score">72</span></div>
+                  <div class="pin-line"></div>
+                  <div class="pin-dot"></div>
+                </div>
+                <div class="pin right warning" style="top: 42%; right: 2%;">
+                  <div class="pin-label">Scalp <span class="pin-score">64</span></div>
+                  <div class="pin-line"></div>
+                  <div class="pin-dot"></div>
+                </div>
+                <div class="pin danger" style="top: 70%; left: 6%;">
+                  <div class="pin-label">Split Ends <span class="pin-score">48</span></div>
+                  <div class="pin-line"></div>
+                  <div class="pin-dot"></div>
+                </div>
+              </div>
+              <div class="map-legend">
+                <span class="legend-item"><span class="legend-dot" style="background:#E5004B"></span>Needs Attention</span>
+                <span class="legend-item"><span class="legend-dot" style="background:#F97316"></span>Average</span>
+                <span class="legend-item"><span class="legend-dot" style="background:#16A34A"></span>Good</span>
+              </div>
+            </div>
+
+            <div class="report-section-head">
+              <div class="report-section-title">Detailed Breakdown</div>
+              <p>What each score means for your routine.</p>
+            </div>
+            <div class="metric-list" id="metric-list"></div>
+
+            <div class="plan-card">
+              <div class="plan-head">
+                <div>
+                  <div class="plan-kicker">Action plan</div>
+                  <div class="plan-title">Your 7-day hair plan</div>
+                </div>
+                <div class="plan-badge">Wash + Treat</div>
+              </div>
+              <div class="plan-step">
+                <div class="plan-num">1</div>
+                <div><strong>Repair lengths first</strong><span>Use a bond-supporting mask twice this week and avoid heat on damp hair.</span></div>
+              </div>
+              <div class="plan-step">
+                <div class="plan-num">2</div>
+                <div><strong>Calm the scalp</strong><span>Switch to a gentle scalp cleanser and rinse thoroughly at the roots.</span></div>
+              </div>
+              <div class="plan-step">
+                <div class="plan-num">3</div>
+                <div><strong>Protect before colour</strong><span>Your hair is colour-ready, but condition ends before any shade refresh.</span></div>
+              </div>
+            </div>
+
+            <div class="colour-card">
+              <div class="colour-head">
+                <div class="colour-title">Hair Colour Readiness</div>
+                <div class="colour-rating">Good</div>
+              </div>
+              <div class="colour-preview">
+                <div class="mini-head">
+                  <svg viewBox="0 0 90 122">
+                    <ellipse id="mini-hair-bg" cx="45" cy="45" rx="30" ry="39" fill="#3A1627" />
+                    <path id="mini-hair-top" d="M15 45C15 20 28 8 45 8s30 12 30 37C66 34 57 29 45 29S24 34 15 45Z" fill="#4B2034" />
+                    <path id="mini-hair-left" d="M18 47c-12 23-10 52-2 62 7-16 8-34 6-51 3-5 6-8 11-11-6-2-11-2-15 0Z" fill="#27141D" />
+                    <path id="mini-hair-right" d="M72 47c12 23 10 52 2 62-7-16-8-34-6-51-3-5-6-8-11-11 6-2 11-2 15 0Z" fill="#27141D" />
+                    <ellipse cx="45" cy="58" rx="23" ry="29" fill="#E8B18C" />
+                    <path d="M32 57c4-3 8-3 12 0M47 57c4-3 8-3 12 0" stroke="#2A150D" stroke-width="2.2" stroke-linecap="round" />
+                    <path d="M38 73c5 4 9 4 14 0" stroke="#9E5B4E" stroke-width="2" stroke-linecap="round" fill="none" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="colour-copy">Your lengths can handle a gentle shade refresh. The safest options are soft black, rich brown, and burgundy gloss tones.</p>
+                  <div class="swatch-row">
+                    <button class="colour-swatch" style="background:#17100E" aria-label="Preview soft black" onclick="previewHairColour('#17100E')"></button>
+                    <button class="colour-swatch" style="background:#4A2416" aria-label="Preview rich brown" onclick="previewHairColour('#4A2416')"></button>
+                    <button class="colour-swatch" style="background:#6A1230" aria-label="Preview burgundy" onclick="previewHairColour('#6A1230')"></button>
+                    <button class="colour-swatch" style="background:#8A4C2A" aria-label="Preview caramel brown" onclick="previewHairColour('#8A4C2A')"></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="report-cta">
+              <div class="report-cta-row">
+                <div class="report-cta-copy">
+                  <div class="report-cta-title">Your Avon products are ready</div>
+                  <div class="report-cta-sub">Answer one quick question before we show your routine.</div>
+                </div>
+                <button class="report-cta-btn" onclick="openProductModal()">See Products <span aria-hidden="true">&rarr;</span></button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen" id="s7">
+          <div class="routine-head">
+            <div class="routine-title">Your Avon Hair<br>Routine</div>
+            <div class="routine-sub" id="routine-sub">Personalised for damage repair and scalp balance.</div>
+          </div>
+          <div class="routine-body">
+            <div class="routine-chip-row" id="routine-chips">
+              <span>Repair lengths</span>
+              <span>Scalp balance</span>
+              <span>Colour safe</span>
+            </div>
+
+            <div class="routine-label">Recommended Products</div>
+            <div id="routine-products"></div>
+
+            <div class="routine-total">
+              <span id="cart-count">0 products selected</span>
+              <span id="cart-total">Rs. 0</span>
+            </div>
+            <div class="routine-actions">
+              <button class="btn-primary" onclick="showToast('Routine added to checkout')">Shop Full Routine</button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal" id="product-modal" role="dialog" aria-modal="true" aria-labelledby="product-modal-title">
+    <div class="modal-card">
+      <div class="modal-top">
+        <div>
+          <div class="modal-kicker">Before products</div>
+          <h2 class="modal-title" id="product-modal-title">What should your routine solve first?</h2>
+        </div>
+        <button class="modal-close" onclick="closeProductModal()" aria-label="Close">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12" /></svg>
+        </button>
+      </div>
+      <div class="modal-options" id="modal-options">
+        <button class="modal-option active" data-focus="damage" onclick="chooseProductFocus(this)">
+          <span class="radio-dot"></span>
+          <span><strong>Repair damage and split ends</strong><span>Best when lengths feel dry, rough, or break easily.</span></span>
+        </button>
+        <button class="modal-option" data-focus="scalp" onclick="chooseProductFocus(this)">
+          <span class="radio-dot"></span>
+          <span><strong>Balance scalp and roots</strong><span>Best when scalp feels oily, itchy, or visibly flaky.</span></span>
+        </button>
+        <button class="modal-option" data-focus="hairfall" onclick="chooseProductFocus(this)">
+          <span class="radio-dot"></span>
+          <span><strong>Support density and hair fall</strong><span>Best when shedding or thinning is your top concern.</span></span>
+        </button>
+        <button class="modal-option" data-focus="colour" onclick="chooseProductFocus(this)">
+          <span class="radio-dot"></span>
+          <span><strong>Keep colour fresh and glossy</strong><span>Best if you plan to refresh or maintain hair colour.</span></span>
+        </button>
+      </div>
+      <button class="btn-primary" onclick="showProductsFromModal()">Show My Products</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Saved</div>
+
+  <script>
+    const screenOrder = ['s1', 's3', 's4', 's5', 's2', 's6', 's7'];
+    const screenLabels = {
+      s1: 'Hair Analysis',
+      s2: 'Your Details',
+      s3: '',
+      s4: 'Hair Camera',
+      s5: 'Analysing',
+      s6: 'Your Report',
+      s7: 'Your Routine'
+    };
+
+    const metrics = [
+      {
+        name: 'Damage and Breakage',
+        score: 46,
+        level: 'danger',
+        severity: 'Needs Attention',
+        insight: 'Visible dryness through the mid-lengths and ends. Prioritise repair masks, heat protection, and less brushing when wet.'
+      },
+      {
+        name: 'Split Ends',
+        score: 48,
+        level: 'danger',
+        severity: 'Needs Attention',
+        insight: 'Ends look uneven and fragile. A trim plus a smoothing serum will make the routine work faster.'
+      },
+      {
+        name: 'Texture and Frizz',
+        score: 52,
+        level: 'warning',
+        severity: 'Average',
+        insight: 'Frizz is visible around the outer layer. Lightweight conditioning and humidity protection should help.'
+      },
+      {
+        name: 'Scalp Health',
+        score: 64,
+        level: 'warning',
+        severity: 'Average',
+        insight: 'Roots look slightly congested. Keep shampoo focused at the scalp and avoid heavy oils near the roots.'
+      },
+      {
+        name: 'Hair Density',
+        score: 72,
+        level: 'good',
+        severity: 'Good',
+        insight: 'Density looks steady overall. Support it with gentle detangling, scalp massage, and consistent nutrition.'
+      },
+      {
+        name: 'Colour Readiness',
+        score: 78,
+        level: 'good',
+        severity: 'Good',
+        insight: 'Hair can handle a gentle gloss or shade refresh. Repair the ends first for a smoother colour result.'
+      }
+    ];
+
+    const avonHairProducts = {
+      reconstruction: {
+        label: 'Repair',
+        name: 'Avon Advance Techniques Reconstruction Shampoo',
+        price: 319.5,
+        old: 355,
+        image: 'https://cdn.shopify.com/s/files/1/0713/1306/4175/files/c35977_at_reconstruction_shampoo__1.png?v=1724485191'
+      },
+      nourishment: {
+        label: 'Nourish',
+        name: 'Avon Advance Techniques Absolute Nourishment Shampoo',
+        price: 355,
+        old: 355,
+        image: 'https://cdn.shopify.com/s/files/1/0713/1306/4175/files/at_argan_sh_apac_200ml_2020_c34749_1_1.jpg?v=1724486410'
+      },
+      hibiscus: {
+        label: 'Fresh',
+        name: 'Avon Naturals Hibiscus & Mint 2-in-1 Shampoo & Conditioner',
+        price: 289,
+        old: 289,
+        image: 'https://cdn.shopify.com/s/files/1/0713/1306/4175/files/C357311.jpg?v=1768812417'
+      },
+      kidsApple: {
+        label: 'Detangle',
+        name: 'Avon Kids 2 in 1 Shampoo & Conditioner Apple Scent 200 ml',
+        price: 460,
+        old: 575,
+        image: 'https://cdn.shopify.com/s/files/1/0713/1306/4175/files/C38888.jpg?v=1762941700'
+      },
+      babyTearFree: {
+        label: 'Gentle',
+        name: 'Avon Care Baby Tear-Free Wash and Shampoo',
+        price: 355,
+        old: 355,
+        image: 'https://cdn.shopify.com/s/files/1/0713/1306/4175/files/C273381.jpg?v=1768812757'
+      },
+      lavender: {
+        label: 'Calm',
+        name: 'Avon Care Baby Calming Lavender Wash & Shampoo',
+        price: 279.3,
+        old: 399,
+        image: 'https://cdn.shopify.com/s/files/1/0713/1306/4175/files/avon_care_baby_calming_lavender_wash_shampoo_c27336_1_1.png?v=1724485532'
+      }
+    };
+
+    const routines = {
+      damage: {
+        sub: 'Focused on damage repair, smoother ends, and colour readiness.',
+        chips: ['Repair lengths', 'Smooth frizz', 'Colour safe'],
+        products: [
+          { ...avonHairProducts.reconstruction, step: 'Step 1 - Repair Cleanse', label: 'Cleanse', why: 'A damage-focused wash for brittle mid-lengths and rough ends.' },
+          { ...avonHairProducts.nourishment, step: 'Step 2 - Nourish', label: 'Nourish', why: 'Argan and coconut oil support dry, unruly lengths without a heavy finish.' },
+          { ...avonHairProducts.hibiscus, step: 'Step 3 - Fresh Care', label: 'Fresh', why: 'Mint and hibiscus give fragile hair a lighter refresh on alternate wash days.' },
+          { ...avonHairProducts.kidsApple, step: 'Step 4 - Detangle', label: 'Detangle', why: 'A 2-in-1 option for gentle detangling when hair feels easy to snag.' }
+        ]
+      },
+      scalp: {
+        sub: 'Focused on scalp comfort, balanced roots, and cleaner lengths.',
+        chips: ['Scalp balance', 'Fresh roots', 'Gentle cleanse'],
+        products: [
+          { ...avonHairProducts.hibiscus, step: 'Step 1 - Scalp Refresh', label: 'Fresh', why: 'Mint helps the scalp feel fresh while the 2-in-1 format keeps lengths comfortable.' },
+          { ...avonHairProducts.nourishment, step: 'Step 2 - Balanced Cleanse', label: 'Cleanse', why: 'A nourishing shampoo option when the scalp needs cleansing but lengths feel dry.' },
+          { ...avonHairProducts.lavender, step: 'Step 3 - Calm Wash', label: 'Calm', why: 'A gentle lavender wash for sensitive-feeling scalp days.' },
+          { ...avonHairProducts.reconstruction, step: 'Step 4 - Repair Lengths', label: 'Repair', why: 'Use through lengths when scalp cleansing leaves ends needing extra care.' }
+        ]
+      },
+      hairfall: {
+        sub: 'Focused on density support, gentle handling, and root strength.',
+        chips: ['Density support', 'Less breakage', 'Root care'],
+        products: [
+          { ...avonHairProducts.reconstruction, step: 'Step 1 - Strengthen', label: 'Cleanse', why: 'Supports breakage-prone hair with a repair-first wash step.' },
+          { ...avonHairProducts.babyTearFree, step: 'Step 2 - Gentle Wash', label: 'Gentle', why: 'A tear-free gentle option for days when roots or scalp feel delicate.' },
+          { ...avonHairProducts.nourishment, step: 'Step 3 - Nourish', label: 'Nourish', why: 'Helps dry lengths feel softer, reducing roughness during combing.' },
+          { ...avonHairProducts.kidsApple, step: 'Step 4 - Detangle', label: 'Detangle', why: 'A 2-in-1 step to reduce tugging and styling friction.' }
+        ]
+      },
+      colour: {
+        sub: 'Focused on colour-safe cleansing, gloss, and shade maintenance.',
+        chips: ['Colour safe', 'Gloss boost', 'Fade control'],
+        products: [
+          { ...avonHairProducts.nourishment, step: 'Step 1 - Gentle Cleanse', label: 'Cleanse', why: 'Nourishing cleansing helps coloured hair look smoother and less dry.' },
+          { ...avonHairProducts.reconstruction, step: 'Step 2 - Repair', label: 'Repair', why: 'Repair support before or after colour helps reduce roughness.' },
+          { ...avonHairProducts.hibiscus, step: 'Step 3 - Freshen', label: 'Fresh', why: 'A light 2-in-1 refresh for days when colour-treated hair needs an easy wash.' },
+          { ...avonHairProducts.lavender, step: 'Step 4 - Gentle Option', label: 'Gentle', why: 'A mild wash choice when the scalp feels sensitive after colour services.' }
+        ]
+      }
+    };
+
+    const hairProfileQuestions = [
+      {
+        type: 'info',
+        section: 'Personal Details',
+        q: 'What is your name and mobile number?',
+        reason: "We'll attach these details to your scan report for the Avon consultation flow.",
+        fields: [
+          { id: 'name', label: 'Your Name', type: 'text', placeholder: 'e.g. Priya Sharma', autocomplete: 'name' },
+          { id: 'mobile', label: 'Mobile Number', type: 'tel', placeholder: 'e.g. 98765 43210', autocomplete: 'tel' }
+        ]
+      },
+      {
+        section: 'Hair Concern',
+        q: 'What is your top hair concern right now?',
+        reason: 'This decides what your product routine should solve first.',
+        focusMap: ['damage', 'scalp', 'hairfall', 'colour'],
+        opts: [
+          { main: 'Damage and split ends', sub: 'Lengths feel dry, rough, or fragile' },
+          { main: 'Scalp and roots', sub: 'Oily, itchy, flaky, or congested scalp' },
+          { main: 'Hair fall or thinning', sub: 'More shedding or less visible density' },
+          { main: 'Colour care', sub: 'Maintain or refresh hair colour safely' }
+        ]
+      },
+      {
+        section: 'Hair Pattern',
+        q: 'How would you describe your hair texture?',
+        reason: 'Texture affects conditioning, frizz control, and styling recommendations.',
+        opts: [
+          { main: 'Straight', sub: 'Falls flat or smooth naturally' },
+          { main: 'Wavy', sub: 'Has bends and frizz through lengths' },
+          { main: 'Curly', sub: 'Needs curl definition and moisture' },
+          { main: 'Not sure', sub: 'Let the scan and report guide the routine' }
+        ]
+      },
+      {
+        section: 'Scalp Behavior',
+        q: 'How does your scalp usually feel?',
+        reason: 'Root condition helps us balance cleansing and treatment frequency.',
+        opts: [
+          { main: 'Oily quickly', sub: 'Roots feel greasy within 1 to 2 days' },
+          { main: 'Dry or itchy', sub: 'Scalp feels tight, flaky, or uncomfortable' },
+          { main: 'Balanced', sub: 'No major scalp discomfort most days' },
+          { main: 'Sensitive', sub: 'Reacts easily to strong products' }
+        ]
+      },
+      {
+        section: 'Routine Style',
+        q: 'How much time should your routine take?',
+        reason: 'We will keep the final steps realistic for your day.',
+        opts: [
+          { main: 'Under 5 minutes', sub: 'Simple essentials only' },
+          { main: '5 to 10 minutes', sub: 'Balanced wash and treatment routine' },
+          { main: 'I enjoy a full routine', sub: 'Layered care with masks and finishers' }
+        ]
+      }
+    ];
+
+    let current = 's1';
+    let cameraStream = null;
+    let detectTimer = null;
+    let analyzeTimers = [];
+    let capturedPhoto = '';
+    let selectedFocus = 'damage';
+    let profileStep = 0;
+    const profileAnswers = {};
+    const cart = {};
+
+    function goTo(id) {
+      if (id === current) return;
+      const prev = current;
+      current = id;
+      const isBack = screenOrder.indexOf(id) < screenOrder.indexOf(prev);
+      const prevEl = document.getElementById(prev);
+      const nextEl = document.getElementById(id);
+
+      document.body.classList.toggle('camera-mode', id === 's4');
+      if (prev === 's4') stopCamera();
+
+      const label = document.getElementById('screen-label');
+      if (label) label.textContent = screenLabels[id] || 'Hair Analysis';
+
+      nextEl.classList.add('active', 'slide-in');
+      prevEl.classList.add('slide-out');
+      if (isBack) {
+        nextEl.classList.add('back');
+        prevEl.classList.add('back');
+      }
+
+      let done = false;
+      function finish() {
+        if (done) return;
+        done = true;
+        prevEl.classList.remove('active', 'slide-out', 'back');
+        nextEl.classList.remove('slide-in', 'back');
+        nextEl.scrollTop = 0;
+        window.scrollTo(0, 0);
+      }
+
+      nextEl.addEventListener('animationend', function handleEnd() {
+        nextEl.removeEventListener('animationend', handleEnd);
+        finish();
+      });
+      setTimeout(finish, 390);
+
+      onEnter(id);
+    }
+
+    function onEnter(id) {
+      if (id === 's4') startCamera();
+      if (id === 's2') {
+        profileStep = 0;
+        renderHairProfile();
+      }
+      if (id === 's6') {
+        renderReportPhoto();
+        renderMetrics();
+        setTimeout(animateReport, 140);
+      }
+      if (id === 's7') renderRoutine();
+    }
+
+    function headerBack() {
+      if (current === 's2' && profileStep > 0) {
+        profileStep--;
+        renderHairProfile();
+        return;
+      }
+      const backMap = { s2: 's5', s3: 's1', s4: 's3', s5: 's4', s6: 's1', s7: 's6' };
+      if (backMap[current]) goTo(backMap[current]);
+      else window.location.href = 'homepage.html';
+    }
+
+    function saveDetailsAndContinue() {
+      profileNext();
+    }
+
+    function goToCapture() {
+      goTo('s4');
+    }
+
+    function renderHairProfile() {
+      const q = hairProfileQuestions[profileStep];
+      const total = hairProfileQuestions.length;
+      const progress = document.getElementById('profile-progress');
+      const body = document.getElementById('profile-body');
+
+      if (progress) {
+        progress.innerHTML = hairProfileQuestions.map((_, index) => {
+          const cls = index < profileStep ? 'done' : index === profileStep ? 'active' : '';
+          return `<div class="profile-bar ${cls}"></div>`;
+        }).join('');
+      }
+
+      const screenLabel = document.getElementById('screen-label');
+      if (screenLabel) screenLabel.textContent = `${profileStep + 1} of ${total}`;
+
+      if (q.type === 'info') {
+        body.innerHTML = `
+          <div class="profile-section">${q.section}</div>
+          <div class="profile-q">${q.q}</div>
+          <div class="profile-reason">${q.reason}</div>
+          ${q.fields.map(field => `
+            <div class="profile-field">
+              <label for="profile-${field.id}">${field.label}</label>
+              <input class="profile-input" id="profile-${field.id}" type="${field.type}" placeholder="${field.placeholder}" autocomplete="${field.autocomplete || ''}" value="${profileAnswers[field.id] || ''}" oninput="profileAnswers['${field.id}']=this.value" />
+            </div>`).join('')}
+          <div class="profile-note">Your details stay with this prototype report and are not shown on the public page.</div>
+          <button class="btn-primary profile-continue" onclick="profileNext()">
+            Continue
+            <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        `;
+        return;
+      }
+
+      const selected = profileAnswers[`q${profileStep}`];
+      body.innerHTML = `
+        <div class="profile-section">${q.section}</div>
+        <div class="profile-q">${q.q}</div>
+        <div class="profile-reason">${q.reason}</div>
+        <div class="profile-options">
+          ${q.opts.map((option, index) => `
+            <button class="profile-option ${selected === index ? 'selected' : ''}" onclick="selectHairProfileOption(${index})">
+              <span class="profile-option-main">${option.main}</span>
+              <span class="profile-option-sub">${option.sub}</span>
+            </button>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function profileNext() {
+      if (profileStep < hairProfileQuestions.length - 1) {
+        profileStep++;
+        renderHairProfile();
+      } else {
+        goTo('s6');
+      }
+    }
+
+    function profileBack() {
+      if (profileStep > 0) {
+        profileStep--;
+        renderHairProfile();
+      } else {
+        goTo('s5');
+      }
+    }
+
+    function selectHairProfileOption(index) {
+      const question = hairProfileQuestions[profileStep];
+      profileAnswers[`q${profileStep}`] = index;
+      if (question.focusMap && question.focusMap[index]) {
+        selectedFocus = question.focusMap[index];
+      }
+      document.querySelectorAll('.profile-option').forEach(option => option.classList.remove('selected'));
+      const selected = document.querySelectorAll('.profile-option')[index];
+      if (selected) selected.classList.add('selected');
+      setTimeout(profileNext, 260);
+    }
+
+    async function startCamera() {
+      const screen = document.getElementById('capture-screen');
+      const video = document.getElementById('camera-video');
+      const frame = document.getElementById('hair-frame');
+      const status = document.getElementById('capture-status');
+      const statusText = document.getElementById('capture-status-text');
+
+      clearTimeout(detectTimer);
+      screen.classList.remove('has-preview', 'camera-ready');
+      video.classList.remove('ready');
+      frame.className = 'hair-frame scanning';
+      status.className = 'status-pill';
+      statusText.textContent = 'Position your hair inside the frame';
+
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'user', width: { ideal: 720 }, height: { ideal: 1280 } },
+            audio: false
+          });
+          cameraStream = stream;
+          video.srcObject = stream;
+          video.addEventListener('playing', function onPlaying() {
+            video.classList.add('ready');
+            screen.classList.add('camera-ready');
+          }, { once: true });
+          await video.play();
+        } catch (err) {
+          statusText.textContent = 'Camera unavailable - upload or skip';
+        }
+      } else {
+        statusText.textContent = 'Camera not supported - upload or skip';
+      }
+
+      detectTimer = setTimeout(() => {
+        frame.className = 'hair-frame ready';
+        status.className = 'status-pill ready';
+        statusText.textContent = 'Hair frame detected';
+      }, 1900);
+    }
+
+    function stopCamera() {
+      clearTimeout(detectTimer);
+      const video = document.getElementById('camera-video');
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+      }
+      if (video) {
+        video.srcObject = null;
+        video.classList.remove('ready');
+      }
+    }
+
+    function capturePhoto() {
+      const video = document.getElementById('camera-video');
+      const preview = document.getElementById('capture-preview');
+      const screen = document.getElementById('capture-screen');
+      const status = document.getElementById('capture-status');
+      const statusText = document.getElementById('capture-status-text');
+
+      if (video.srcObject && video.readyState >= 2 && video.videoWidth > 0) {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, 0, 0);
+        capturedPhoto = canvas.toDataURL('image/jpeg', 0.92);
+        preview.src = capturedPhoto;
+        screen.classList.add('has-preview');
+        status.className = 'status-pill ready';
+        statusText.textContent = 'Preview ready';
+        stopCamera();
+      } else {
+        status.className = 'status-pill';
+        statusText.textContent = 'Camera not ready — try again or upload a photo';
+      }
+    }
+
+    function retakePhoto() {
+      const preview = document.getElementById('capture-preview');
+      capturedPhoto = '';
+      preview.removeAttribute('src');
+      document.getElementById('capture-screen').classList.remove('has-preview');
+      startCamera();
+    }
+
+    function resetAnalysis() {
+      analyzeTimers.forEach(clearInterval);
+      analyzeTimers.forEach(clearTimeout);
+      analyzeTimers = [];
+      document.getElementById('analysis-pct').textContent = '0%';
+      document.querySelectorAll('.analysis-step').forEach((step, index) => {
+        step.classList.remove('on', 'done');
+        step.querySelector('.analysis-step-icon').textContent = String(index + 1).padStart(2, '0');
+      });
+    }
+
+    function startAnalyzing(nextScreen = 's6') {
+      stopCamera();
+      resetAnalysis();
+      goTo('s5');
+
+      let pct = 0;
+      let stepIndex = 0;
+      const pctEl = document.getElementById('analysis-pct');
+      const steps = document.querySelectorAll('.analysis-step');
+      steps[0].classList.add('on');
+
+      const pctTimer = setInterval(() => {
+        pct = Math.min(pct + Math.random() * 9 + 4, 96);
+        pctEl.textContent = Math.round(pct) + '%';
+      }, 180);
+      analyzeTimers.push(pctTimer);
+
+      const stepTimer = setInterval(() => {
+        if (stepIndex < steps.length) {
+          steps[stepIndex].classList.remove('on');
+          steps[stepIndex].classList.add('done');
+          steps[stepIndex].querySelector('.analysis-step-icon').textContent = '✓';
+        }
+        stepIndex++;
+        if (stepIndex < steps.length) steps[stepIndex].classList.add('on');
+        else clearInterval(stepTimer);
+      }, 1050);
+      analyzeTimers.push(stepTimer);
+
+      const finishTimer = setTimeout(() => {
+        analyzeTimers.forEach(clearInterval);
+        pctEl.textContent = '100%';
+        setTimeout(() => goTo(nextScreen), 650);
+      }, 5000);
+      analyzeTimers.push(finishTimer);
+    }
+
+    function renderReportPhoto() {
+      const img = document.getElementById('report-photo');
+      img.src = capturedPhoto || 'hair.png';
+    }
+
+    function renderMetrics() {
+      const list = document.getElementById('metric-list');
+      list.innerHTML = metrics.map(metric => `
+        <div class="metric-card">
+          <div class="metric-top">
+            <div class="metric-name">${metric.name}</div>
+            <div class="metric-sev ${metric.level}">${metric.severity}</div>
+          </div>
+          <div class="metric-bar"><div class="metric-fill ${metric.level}" data-score="${metric.score}"></div></div>
+          <div class="metric-score">${metric.score} / 100</div>
+          <div class="metric-copy">${metric.insight}</div>
+        </div>
+      `).join('');
+    }
+
+    function animateReport() {
+      const score = 74;
+      const arc = document.getElementById('score-arc');
+      const num = document.getElementById('score-num');
+      const circumference = 2 * Math.PI * 40;
+      const offset = circumference - (score / 100) * circumference;
+
+      arc.style.transition = 'none';
+      arc.style.strokeDashoffset = circumference;
+      num.textContent = '0';
+
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        arc.style.transition = 'stroke-dashoffset 1.35s cubic-bezier(.4,0,.2,1)';
+        arc.style.strokeDashoffset = offset;
+      }));
+
+      let currentNum = 0;
+      const timer = setInterval(() => {
+        currentNum = Math.min(currentNum + 2, score);
+        num.textContent = currentNum;
+        if (currentNum >= score) clearInterval(timer);
+      }, 28);
+
+      document.querySelectorAll('.metric-fill[data-score]').forEach((bar, index) => {
+        bar.style.width = '0';
+        setTimeout(() => {
+          bar.style.width = bar.dataset.score + '%';
+        }, 320 + index * 120);
+      });
+    }
+
+    function previewHairColour(color) {
+      ['mini-hair-bg', 'mini-hair-top', 'mini-hair-left', 'mini-hair-right'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.setAttribute('fill', color);
+      });
+    }
+
+    function openProductModal() {
+      document.getElementById('product-modal').classList.add('open');
+    }
+
+    function closeProductModal() {
+      document.getElementById('product-modal').classList.remove('open');
+    }
+
+    function chooseProductFocus(button) {
+      document.querySelectorAll('.modal-option').forEach(option => option.classList.remove('active'));
+      button.classList.add('active');
+      selectedFocus = button.dataset.focus || 'damage';
+    }
+
+    function showProductsFromModal() {
+      closeProductModal();
+      goTo('s7');
+    }
+
+    function formatMoney(value) {
+      const amount = Number(value) || 0;
+      const hasPaise = Math.round(amount * 100) % 100 !== 0;
+      return amount.toLocaleString('en-IN', {
+        minimumFractionDigits: hasPaise ? 2 : 0,
+        maximumFractionDigits: hasPaise ? 2 : 0
+      });
+    }
+
+    function renderRoutine() {
+      Object.keys(cart).forEach(key => delete cart[key]);
+      updateCartTotal();
+      const routine = routines[selectedFocus] || routines.damage;
+      document.getElementById('routine-sub').textContent = routine.sub;
+      document.getElementById('routine-chips').innerHTML = routine.chips.map(chip => `<span>${chip}</span>`).join('');
+      document.getElementById('routine-products').innerHTML = routine.products.map((product, index) => `
+        <div class="routine-card">
+          <div class="product-img">
+            <span>${product.label}</span>
+            ${product.image ? `<img src="${product.image}" alt="${product.name}" loading="lazy" decoding="async" onerror="this.style.display='none'">` : ''}
+          </div>
+          <div>
+            <div class="product-step">${product.step}</div>
+            <div class="product-name">${product.name}</div>
+            <div class="product-why">${product.why}</div>
+            <div class="product-bottom">
+              <div><span class="price">Rs. ${formatMoney(product.price)}</span>${product.old > product.price ? `<span class="price-old">Rs. ${formatMoney(product.old)}</span>` : ''}</div>
+              <button class="add-btn" onclick="toggleCart(this, ${index}, ${product.price})">Add to cart</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function toggleCart(button, id, price) {
+      if (cart[id]) {
+        delete cart[id];
+        button.textContent = 'Add to cart';
+        button.classList.remove('added');
+      } else {
+        cart[id] = price;
+        button.textContent = 'Added';
+        button.classList.add('added');
+        showToast('Added to routine');
+      }
+      updateCartTotal();
+    }
+
+    function updateCartTotal() {
+      const values = Object.values(cart);
+      const total = values.reduce((sum, price) => sum + price, 0);
+      const count = values.length;
+      document.getElementById('cart-count').textContent = `${count} product${count === 1 ? '' : 's'} selected`;
+      document.getElementById('cart-total').textContent = `Rs. ${formatMoney(total)}`;
+    }
+
+    function restartJourney() {
+      capturedPhoto = '';
+      selectedFocus = 'damage';
+      closeProductModal();
+      goTo('s1');
+    }
+
+    let toastTimer;
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    document.getElementById('product-modal').addEventListener('click', function closeOnBackdrop(evt) {
+      if (evt.target === this) closeProductModal();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,2516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>Avon — Makeup Try-On</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="tokens.css"/>
+  <link rel="stylesheet" href="reset.css"/>
+  <style>
+    :root {
+      --red: #E5004B;
+      --red-hover: #c40040;
+      --ink: #151217;
+      --ink-2: rgba(21,18,23,.66);
+      --ink-3: rgba(21,18,23,.46);
+      --white: #FFFFFF;
+      --shell: #FFFCFA;
+      --soft: #FBF7F4;
+      --warm: #EFE6DE;
+      --sage: #DCE9DF;
+      --plum: #3A1627;
+      --line: rgba(21,18,23,.09);
+      --line-strong: rgba(21,18,23,.16);
+      --success: #168A52;
+      --amber: #D89414;
+      --radius: 18px;
+      --pill: 100px;
+      --header-h: 58px;
+      --lip-color: #C61F46;
+      --eye-color: #9A7A3B;
+      --blush-color: #E06470;
+      --base-color: #C9976E;
+      --tryon-strength: .78;
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      min-height: 100dvh;
+      overflow-x: hidden;
+      background:
+        linear-gradient(135deg, #E9E1D8 0%, #F8F1ED 42%, var(--sage) 100%);
+      color: var(--ink);
+      font-family: 'Montserrat', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body.studio-mode {
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    button, input { font-family: inherit; }
+
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible {
+      outline: 2px solid var(--red);
+      outline-offset: 3px;
+    }
+
+    .app-wrap {
+      display: flex;
+      justify-content: center;
+      min-height: 100dvh;
+      width: 100%;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 430px;
+      min-height: 100dvh;
+      position: relative;
+      overflow: hidden;
+      background: var(--shell);
+    }
+
+    @media (min-width: 520px) {
+      .app-wrap { padding: 28px 0 40px; }
+      .app {
+        min-height: calc(100dvh - 68px);
+        max-height: calc(100dvh - 68px);
+        border-radius: 34px;
+      }
+      body.studio-mode .app {
+        height: calc(100dvh - 56px);
+        min-height: calc(100dvh - 56px);
+        max-height: calc(100dvh - 56px);
+      }
+    }
+
+    .sdk-header {
+      height: var(--header-h);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 18px;
+      background: rgba(255,252,250,.94);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    body.studio-mode .sdk-header { display: none; }
+
+    .sdk-back {
+      display: inline-flex;
+      min-width: 0;
+      flex: 1 1 0;
+      align-items: center;
+      gap: 6px;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 600;
+      background: transparent;
+      border: 0;
+      cursor: pointer;
+    }
+
+    .sdk-back:hover { color: var(--red); }
+
+    .sdk-logo {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--red);
+      font-size: 21px;
+      font-weight: 600;
+      letter-spacing: .12em;
+      line-height: 1;
+      text-decoration: none;
+    }
+
+    .sdk-label {
+      flex: 1 1 0;
+      min-width: 0;
+      overflow: hidden;
+      color: var(--ink-3);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-align: right;
+      text-overflow: ellipsis;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .sdk-spacer {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    .screen {
+      display: none;
+      flex-direction: column;
+      min-height: calc(100dvh - var(--header-h));
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+
+    .screen.active { display: flex; }
+
+    body.studio-mode .screen.active {
+      height: 100dvh;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    @media (min-width: 520px) {
+      .screen { min-height: calc(100dvh - 126px); }
+      body.studio-mode .screen.active { height: calc(100dvh - 56px); }
+    }
+
+    .icon {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+      stroke: currentColor;
+      stroke-width: 2.4;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .btn {
+      min-height: 56px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 20px;
+      border: 0;
+      border-radius: var(--pill);
+      background: var(--red);
+      color: var(--white);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .02em;
+      line-height: 1;
+      cursor: pointer;
+      transition: background .16s ease, transform .16s ease;
+    }
+
+    .btn:hover {
+      background: var(--red-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn--dark {
+      background: var(--ink);
+    }
+
+    .btn--dark:hover { background: #2b1320; }
+
+    .btn--soft {
+      background: rgba(255,255,255,.9);
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .btn--soft:hover {
+      background: var(--white);
+      color: var(--red);
+      border-color: rgba(229,0,75,.24);
+    }
+
+    .icon-btn {
+      width: 42px;
+      height: 42px;
+      display: inline-grid;
+      place-items: center;
+      position: relative;
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 50%;
+      background: rgba(12,10,13,.46);
+      color: var(--white);
+      cursor: pointer;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .icon-btn.light {
+      border-color: var(--line);
+      background: rgba(255,255,255,.94);
+      color: var(--ink);
+    }
+
+    .icon-btn:hover { color: #fff; background: var(--red); }
+    .icon-btn.light:hover { color: #fff; border-color: var(--red); }
+
+    .bag-dot {
+      min-width: 18px;
+      height: 18px;
+      display: none;
+      place-items: center;
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      border-radius: 50%;
+      background: var(--red);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .bag-dot.on { display: grid; }
+
+    /* S1 intro */
+    #s1 {
+      min-height: calc(100dvh - var(--header-h));
+      overflow: hidden;
+    }
+
+    .intro-hero {
+      flex: 1;
+      min-height: calc(100dvh - var(--header-h));
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      padding: 24px 22px calc(24px + env(safe-area-inset-bottom, 0px));
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(12,8,11,.08) 0%, rgba(12,8,11,.34) 42%, rgba(12,8,11,.88) 100%),
+        url("Makeup.png") center top / cover no-repeat;
+      color: #fff;
+    }
+
+    .intro-hero::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(150deg, transparent 0%, rgba(229,0,75,.12) 54%, rgba(220,233,223,.14) 100%);
+      pointer-events: none;
+    }
+
+    .intro-content {
+      width: 100%;
+      position: relative;
+      z-index: 1;
+    }
+
+    .kicker {
+      margin-bottom: 10px;
+      color: rgba(255,255,255,.82);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    .intro-title {
+      max-width: 350px;
+      margin: 0 0 14px;
+      color: #fff;
+      font-size: 36px;
+      font-weight: 600;
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+
+    .intro-copy {
+      max-width: 340px;
+      margin: 0 0 22px;
+      color: rgba(255,255,255,.76);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .intro-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .intro-actions .btn {
+      min-height: 54px;
+      padding: 0 14px;
+    }
+
+    @media (min-width: 520px) {
+      #s1,
+      .intro-hero {
+        min-height: calc(100dvh - 126px);
+      }
+    }
+
+    @media (max-height: 740px) {
+      .intro-title { font-size: 32px; margin-bottom: 10px; }
+      .intro-copy { margin-bottom: 14px; font-size: 13px; line-height: 1.42; }
+      .btn { min-height: 52px; }
+      .intro-actions .btn { min-height: 50px; }
+    }
+
+    /* Shared page content */
+    .page-pad {
+      padding: 24px 20px calc(28px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .screen-title {
+      margin: 0 0 8px;
+      color: var(--ink);
+      font-size: 30px;
+      font-weight: 600;
+      letter-spacing: 0;
+      line-height: 1.12;
+    }
+
+    .screen-copy {
+      margin: 0;
+      color: var(--ink-2);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .progress {
+      display: flex;
+      gap: 6px;
+      padding: 18px 20px 0;
+    }
+
+    .progress span {
+      height: 4px;
+      flex: 1;
+      border-radius: var(--pill);
+      background: #E8DDD6;
+    }
+
+    .progress span.done { background: var(--plum); }
+    .progress span.active { background: var(--red); }
+
+    .bottom-action {
+      display: grid;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    /* S4 analyzing */
+    .analysis-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 38px 28px;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(229,0,75,.07), transparent 34%),
+        linear-gradient(180deg, #FFFCFA 0%, #F7F0EC 100%);
+      text-align: center;
+    }
+
+    .analysis-ring-wrap {
+      width: 132px;
+      height: 132px;
+      position: relative;
+      margin-bottom: 30px;
+    }
+
+    .analysis-ring,
+    .analysis-ring-inner {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 3px solid #F0E0E5;
+      border-top-color: var(--red);
+      animation: spin 1.05s linear infinite;
+    }
+
+    .analysis-ring-inner {
+      inset: 13px;
+      border-width: 2px;
+      border-top-color: #F0E0E5;
+      border-bottom-color: var(--red);
+      opacity: .55;
+      animation-duration: 1.8s;
+      animation-direction: reverse;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .analysis-pct {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: var(--red);
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .analysis-title {
+      max-width: 330px;
+      margin: 0 0 8px;
+      color: var(--ink);
+      font-size: 25px;
+      font-weight: 600;
+      line-height: 1.15;
+    }
+
+    .analysis-copy {
+      margin: 0 0 26px;
+      color: var(--ink-3);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .analysis-steps {
+      width: 100%;
+      max-width: 318px;
+      display: grid;
+      padding: 8px 18px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: #fff;
+      text-align: left;
+    }
+
+    .analysis-step {
+      min-height: 56px;
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--line);
+      color: rgba(21,18,23,.42);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .analysis-step:last-child { border-bottom: 0; }
+
+    .analysis-step span {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--soft);
+      color: var(--red);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .analysis-step.on {
+      color: var(--ink);
+    }
+
+    .analysis-step.on span {
+      background: var(--ink);
+      color: #fff;
+    }
+
+    /* S5 Studio */
+    #s5 { background: #060506; color: #fff; }
+
+    .studio {
+      flex: 1;
+      min-height: 0;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: #fff;
+      color: var(--ink);
+    }
+
+    .tryon-frame {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: #F6D5D8;
+    }
+
+    .tryon-video,
+    .tryon-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: 46% 45%;
+      transform: scale(1.06);
+    }
+
+    .tryon-video {
+      opacity: 0;
+      transform: scaleX(-1) scale(1.05);
+    }
+
+    .tryon-video.ready { opacity: 1; }
+    .tryon-video.ready + .tryon-img { opacity: 0; }
+
+    .look-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      transition: opacity .18s ease, clip-path .18s ease;
+    }
+
+    .tryon-frame.before-on .look-layer { opacity: 0; }
+    .tryon-frame.compare-on .look-layer { clip-path: inset(0 0 0 50%); }
+
+    .compare-line {
+      display: none;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      z-index: 3;
+      width: 2px;
+      background: rgba(255,255,255,.82);
+    }
+
+    .tryon-frame.compare-on .compare-line { display: block; }
+
+    .compare-badge {
+      position: absolute;
+      top: calc(76px + env(safe-area-inset-top, 0px));
+      left: 50%;
+      transform: translateX(-50%);
+      display: none;
+      z-index: 4;
+      padding: 7px 11px;
+      border-radius: var(--pill);
+      background: rgba(0,0,0,.48);
+      color: rgba(255,255,255,.9);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .tryon-frame.compare-on .compare-badge { display: block; }
+
+    .face-base {
+      position: absolute;
+      left: 16%;
+      top: 24%;
+      width: 68%;
+      height: 43%;
+      border-radius: 45% 45% 48% 48%;
+      background:
+        radial-gradient(ellipse at 50% 42%, color-mix(in srgb, var(--base-color) 28%, transparent), transparent 62%);
+      opacity: calc(var(--tryon-strength) * .42);
+      mix-blend-mode: soft-light;
+      filter: blur(7px);
+    }
+
+    .lip {
+      position: absolute;
+      left: 43.2%;
+      top: 58.4%;
+      width: 17.2%;
+      height: 4.8%;
+      opacity: calc(var(--tryon-strength) * .9);
+      filter: blur(.55px) saturate(1.1);
+      mix-blend-mode: multiply;
+    }
+
+    .lip::before,
+    .lip::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      background: var(--lip-color);
+    }
+
+    .lip::before {
+      top: 0;
+      height: 47%;
+      border-radius: 52% 52% 38% 38% / 80% 80% 50% 50%;
+      clip-path: polygon(0 78%, 16% 25%, 38% 18%, 50% 38%, 62% 18%, 84% 25%, 100% 78%, 70% 100%, 50% 82%, 30% 100%);
+    }
+
+    .lip::after {
+      bottom: 0;
+      height: 62%;
+      border-radius: 45% 45% 58% 58% / 36% 36% 84% 84%;
+      clip-path: ellipse(50% 46% at 50% 38%);
+    }
+
+    .gloss {
+      position: absolute;
+      left: 46.6%;
+      top: 59.2%;
+      width: 5.8%;
+      height: 1.4%;
+      border-radius: 50%;
+      background: rgba(255,255,255,.68);
+      opacity: calc(var(--tryon-strength) * .75);
+      filter: blur(1px);
+      transform: rotate(-7deg);
+    }
+
+    .eye-shadow {
+      position: absolute;
+      top: 40.7%;
+      width: 16.4%;
+      height: 4.8%;
+      border-radius: 50%;
+      background:
+        radial-gradient(ellipse at 50% 50%, color-mix(in srgb, var(--eye-color) 82%, transparent) 0%, color-mix(in srgb, var(--eye-color) 34%, transparent) 62%, transparent 76%);
+      opacity: calc(var(--tryon-strength) * .82);
+      mix-blend-mode: multiply;
+      filter: blur(2px);
+    }
+
+    .eye-shadow.left { left: 27.8%; transform: rotate(-7deg); }
+    .eye-shadow.right { right: 26.4%; transform: rotate(7deg); }
+
+    .liner {
+      position: absolute;
+      top: 42.9%;
+      width: 15.2%;
+      height: 1.6%;
+      border-top: 2px solid color-mix(in srgb, var(--eye-color) 65%, #1c1414);
+      opacity: calc(var(--tryon-strength) * .86);
+      filter: blur(.2px);
+    }
+
+    .liner.left {
+      left: 28.6%;
+      border-radius: 80% 28% 0 0;
+      transform: rotate(-5deg);
+    }
+
+    .liner.right {
+      right: 27%;
+      border-radius: 28% 80% 0 0;
+      transform: rotate(5deg);
+    }
+
+    .blush {
+      position: absolute;
+      top: 50.8%;
+      width: 15.5%;
+      height: 9.4%;
+      border-radius: 50%;
+      background: radial-gradient(circle, color-mix(in srgb, var(--blush-color) 74%, transparent) 0%, color-mix(in srgb, var(--blush-color) 34%, transparent) 45%, transparent 72%);
+      opacity: calc(var(--tryon-strength) * .8);
+      filter: blur(7px);
+      mix-blend-mode: multiply;
+    }
+
+    .blush.left { left: 25.5%; transform: rotate(-12deg); }
+    .blush.right { right: 23.8%; transform: rotate(12deg); }
+
+    .glitter-fleck {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: rgba(255,236,180,.88);
+      opacity: calc(var(--tryon-strength) * .82);
+      filter: blur(.1px);
+    }
+
+    .studio-vignette { display: none; }
+
+    .studio-ui {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+
+    .studio-ui button,
+    .studio-ui input,
+    .studio-ui a { pointer-events: auto; }
+
+    .studio-top {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 48px;
+      padding: calc(10px + env(safe-area-inset-top, 0px)) 14px 6px;
+      background: rgba(255,255,255,.96);
+      border-bottom: 1px solid rgba(21,18,23,.08);
+      color: var(--ink);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    .studio-brand {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--red);
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: .12em;
+      line-height: 1;
+    }
+
+    .studio-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      flex: 0 0 auto;
+    }
+
+    .studio .icon-btn {
+      width: 36px;
+      height: 36px;
+      border-color: transparent;
+      background: transparent;
+      color: var(--ink);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+
+    .studio .icon-btn:hover {
+      background: var(--red);
+      color: #fff;
+    }
+
+    .studio .bag-dot {
+      top: -2px;
+      right: -2px;
+    }
+
+    .studio-bottom {
+      display: grid;
+      gap: 0;
+      padding: 0;
+      background: rgba(255,255,255,.98);
+      color: var(--ink);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    .cat-row::-webkit-scrollbar,
+    .shade-row::-webkit-scrollbar,
+    .product-row::-webkit-scrollbar,
+    .look-row::-webkit-scrollbar { display: none; }
+
+    .studio-mode-tabs {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+      padding: 8px 12px 7px;
+      border-bottom: 1px solid rgba(21,18,23,.08);
+      background: #fff;
+    }
+
+    .studio-mode-tab {
+      min-height: 34px;
+      border: 0;
+      border-radius: 9px;
+      background: #F4F4F4;
+      color: rgba(21,18,23,.58);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .studio-mode-tab.active {
+      background: var(--ink);
+      color: #fff;
+    }
+
+    .control-deck {
+      display: grid;
+      gap: 6px;
+      padding: 0 12px;
+      background: #fff;
+    }
+
+    .control-deck[hidden],
+    .cat-row[hidden],
+    .look-deck[hidden] {
+      display: none;
+    }
+
+    .cat-row {
+      display: flex;
+      gap: 22px;
+      overflow-x: auto;
+      padding: 0 14px;
+      border-bottom: 1px solid rgba(21,18,23,.08);
+      scrollbar-width: none;
+    }
+
+    .cat-tab {
+      min-height: 38px;
+      flex: 0 0 auto;
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      color: rgba(21,18,23,.58);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .cat-tab.active {
+      background: transparent;
+      color: var(--ink);
+    }
+
+    .cat-tab.active::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 2px;
+      border-radius: var(--pill);
+      background: var(--ink);
+    }
+
+    .cat-tab .icon {
+      display: none;
+    }
+
+    .shade-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-height: 44px;
+      overflow-x: auto;
+      padding: 2px 8px;
+      border-radius: 8px;
+      background: var(--color-gray-16, #F4F4F4);
+      scrollbar-width: none;
+    }
+
+    .shade-btn {
+      width: 28px;
+      height: 28px;
+      flex: 0 0 auto;
+      position: relative;
+      border: 1px solid rgba(21,18,23,.08);
+      border-radius: 50%;
+      background: var(--shade);
+      cursor: pointer;
+    }
+
+    .shade-btn.active {
+      border-color: var(--red);
+    }
+
+    .shade-btn .sr-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+    .variant-row {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      gap: 12px;
+      min-height: 44px;
+      padding: 0 8px;
+      border-radius: 8px;
+      background: var(--color-gray-16, #F4F4F4);
+    }
+
+    .variant-label {
+      color: var(--ink);
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .intensity-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 8px;
+      color: rgba(21,18,23,.58);
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .intensity-row input {
+      width: 100%;
+      accent-color: var(--red);
+    }
+
+    .product-row {
+      display: flex;
+      gap: 14px;
+      overflow-x: auto;
+      min-height: 86px;
+      padding: 3px 0 1px;
+      scrollbar-width: none;
+    }
+
+    .product-card {
+      width: 82px;
+      min-width: 82px;
+      height: 82px;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      border: 1px solid transparent;
+      border-radius: 14px;
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .product-card.active {
+      background: #fff;
+      color: var(--ink);
+      border-color: var(--red);
+    }
+
+    .product-mini {
+      width: 68px;
+      height: 70px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      border-radius: 12px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.96), rgba(255,255,255,.55)),
+        var(--shade);
+    }
+
+    .product-mini.has-image {
+      background: #fff;
+    }
+
+    .product-mini::before {
+      content: '';
+      width: 11px;
+      height: 27px;
+      display: block;
+      border-radius: 8px 8px 5px 5px;
+      background: var(--shade);
+    }
+
+    .product-mini.has-image::before {
+      display: none;
+    }
+
+    .product-mini img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+    }
+
+    .product-mini.has-image img {
+      transform: scale(1.55);
+      transform-origin: center;
+    }
+
+    .product-text { display: none; }
+
+    .look-deck {
+      display: grid;
+      gap: 10px;
+      padding: 8px 12px 0;
+      background: #fff;
+    }
+
+    .look-row {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 2px 0 0;
+      scrollbar-width: none;
+    }
+
+    .look-card {
+      min-width: 132px;
+      display: grid;
+      gap: 8px;
+      padding: 8px;
+      border: 1px solid rgba(21,18,23,.10);
+      border-radius: 12px;
+      background: #fff;
+      color: var(--ink);
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .look-card.active {
+      border-color: var(--red);
+      background: #FFF3F7;
+    }
+
+    .look-card-image {
+      height: 92px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 10px;
+      background:
+        linear-gradient(180deg, rgba(21,18,23,.02), rgba(21,18,23,.22)),
+        url("Makeup.png") var(--look-pos, center top) / 190% auto no-repeat;
+    }
+
+    .look-card-image::after {
+      content: '';
+      position: absolute;
+      inset: auto 0 0;
+      height: 44%;
+      background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--look-accent, var(--red)) 32%, transparent));
+    }
+
+    .look-card-title {
+      display: block;
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .product-footer {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      align-items: center;
+      gap: 10px;
+      margin: 3px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+      padding: 8px;
+      border: 1px solid rgba(21,18,23,.08);
+      border-radius: 10px;
+      background: #fff;
+    }
+
+    .footer-info {
+      min-width: 0;
+      display: grid;
+      gap: 3px;
+    }
+
+    .footer-kicker {
+      overflow: hidden;
+      color: rgba(21,18,23,.55);
+      font-size: 11px;
+      font-weight: 500;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .footer-price {
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .cart-pill {
+      min-height: 36px;
+      padding: 0 18px;
+      border: 0;
+      border-radius: var(--pill);
+      background: #000;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .cart-pill:hover {
+      background: var(--red);
+    }
+
+    .cart-pill:disabled {
+      background: rgba(21,18,23,.22);
+      color: rgba(255,255,255,.72);
+      cursor: not-allowed;
+    }
+
+    .heart-btn {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(21,18,23,.08);
+      border-radius: 50%;
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .heart-btn:hover {
+      border-color: rgba(229,0,75,.28);
+      color: var(--red);
+    }
+
+    /* S6 Bag */
+    .bag-hero {
+      position: relative;
+      overflow: hidden;
+      min-height: 190px;
+      padding: 26px 20px 58px;
+      background:
+        radial-gradient(circle at 14% 0%, rgba(229,0,75,.26), transparent 44%),
+        linear-gradient(145deg, #3A1627 0%, #151217 62%, #2B1320 100%);
+      color: #fff;
+    }
+
+    .bag-hero::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -1px;
+      height: 28px;
+      border-radius: 28px 28px 0 0;
+      background: var(--soft);
+    }
+
+    .bag-back {
+      position: relative;
+      z-index: 1;
+      min-height: 42px;
+      padding: 0 14px;
+      border-color: rgba(255,255,255,.18);
+      background: rgba(255,255,255,.94);
+      box-shadow: 0 12px 28px rgba(0,0,0,.18);
+      font-size: 12px;
+    }
+
+    .bag-eyebrow {
+      position: relative;
+      z-index: 1;
+      margin: 24px 0 8px;
+      color: rgba(255,255,255,.72);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    .bag-hero h1 {
+      position: relative;
+      z-index: 1;
+      max-width: 330px;
+      margin: 0 0 8px;
+      color: #fff;
+      font-size: 28px;
+      font-weight: 600;
+      line-height: 1.1;
+    }
+
+    .bag-hero p {
+      position: relative;
+      z-index: 1;
+      max-width: 320px;
+      margin: 0;
+      color: rgba(255,255,255,.62);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .bag-body {
+      padding: 16px 16px calc(32px + env(safe-area-inset-bottom, 0px));
+      background: var(--soft);
+    }
+
+    .bag-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0 0 18px;
+    }
+
+    .bag-chip-row span {
+      padding: 7px 10px;
+      border-radius: var(--pill);
+      background: #fff;
+      color: rgba(21,18,23,.6);
+      font-size: 11px;
+      font-weight: 600;
+      box-shadow: 0 8px 20px rgba(40,25,32,.05);
+    }
+
+    .bag-section-label {
+      margin: 0 0 10px;
+      color: rgba(21,18,23,.52);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .bag-line {
+      display: grid;
+      grid-template-columns: 66px minmax(0, 1fr) auto;
+      gap: 13px;
+      align-items: center;
+      padding: 13px;
+      margin-bottom: 10px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #fff;
+      box-shadow: 0 12px 28px rgba(40,25,32,.05);
+    }
+
+    .bag-swatch {
+      width: 66px;
+      height: 66px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      border-radius: 16px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.84), rgba(255,255,255,.42)),
+        var(--shade);
+    }
+
+    .bag-swatch::before {
+      content: '';
+      width: 18px;
+      height: 34px;
+      border-radius: 10px 10px 6px 6px;
+      background: var(--shade);
+    }
+
+    .bag-swatch.has-image {
+      background: #fff;
+    }
+
+    .bag-swatch.has-image::before {
+      display: none;
+    }
+
+    .bag-swatch img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+    }
+
+    .bag-info { min-width: 0; }
+
+    .bag-info strong {
+      display: block;
+      overflow: hidden;
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.25;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .bag-info em {
+      display: block;
+      margin-top: 3px;
+      color: var(--ink-3);
+      font-size: 11px;
+      font-weight: 600;
+      font-style: normal;
+      line-height: 1.35;
+    }
+
+    .bag-info span {
+      display: inline-flex;
+      margin-top: 8px;
+      padding: 4px 8px;
+      border-radius: var(--pill);
+      background: #F5EFEA;
+      color: rgba(21,18,23,.58);
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .bag-price {
+      color: var(--ink);
+      font-size: 15px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .empty-bag {
+      display: grid;
+      place-items: center;
+      min-height: 190px;
+      padding: 28px;
+      border: 1px dashed var(--line-strong);
+      border-radius: 22px;
+      background: #fff;
+      color: var(--ink-3);
+      text-align: center;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .checkout-panel {
+      position: sticky;
+      bottom: 12px;
+      z-index: 8;
+      margin-top: 16px;
+      padding: 15px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 20px;
+      background: var(--ink);
+      color: #fff;
+      box-shadow: 0 18px 44px rgba(21,18,23,.24);
+    }
+
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 12px;
+      color: rgba(255,255,255,.62);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .total-row strong {
+      color: #fff;
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .checkout-modes {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .checkout-mode {
+      min-height: 52px;
+      padding: 9px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 14px;
+      background: rgba(255,255,255,.07);
+      color: rgba(255,255,255,.72);
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1.25;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .checkout-mode span {
+      color: inherit;
+      opacity: .78;
+    }
+
+    .checkout-mode.active {
+      background: #fff;
+      color: var(--ink);
+    }
+
+    .cart-actions {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .cart-actions .btn {
+      min-height: 50px;
+      box-shadow: none;
+    }
+
+    /* S7 confirmation */
+    .done-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 34px 22px calc(30px + env(safe-area-inset-bottom, 0px));
+      background:
+        radial-gradient(circle at 50% 8%, rgba(229,0,75,.10), transparent 38%),
+        linear-gradient(180deg, #FFFCFA 0%, #F7F0EC 100%);
+      text-align: center;
+    }
+
+    .done-mark {
+      width: 84px;
+      height: 84px;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 22px;
+      border-radius: 50%;
+      background: #EFF7F1;
+      color: var(--success);
+    }
+
+    .done-wrap h1 {
+      max-width: 340px;
+      margin: 0 auto 10px;
+      color: var(--ink);
+      font-size: 30px;
+      font-weight: 600;
+      line-height: 1.1;
+    }
+
+    .done-wrap p {
+      max-width: 330px;
+      margin: 0 auto 24px;
+      color: var(--ink-2);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .done-summary {
+      display: grid;
+      gap: 8px;
+      margin: 0 0 24px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: #fff;
+      text-align: left;
+    }
+
+    .done-summary div {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      color: var(--ink-3);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .done-summary strong {
+      color: var(--ink);
+      text-align: right;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 28px;
+      z-index: 999;
+      transform: translateX(-50%) translateY(70px);
+      max-width: min(360px, calc(100vw - 36px));
+      padding: 11px 18px;
+      border-radius: var(--pill);
+      background: var(--ink);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .24s, transform .24s;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .look-sheet-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 700;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 0;
+      background: rgba(21,18,23,.34);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .22s ease;
+    }
+
+    .look-sheet-backdrop.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .look-sheet {
+      width: min(430px, 100vw);
+      max-height: min(78dvh, 680px);
+      display: grid;
+      gap: 14px;
+      padding: 10px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+      border-radius: 28px 28px 0 0;
+      background: #fff;
+      color: var(--ink);
+      box-shadow: 0 -24px 60px rgba(21,18,23,.22);
+      transform: translateY(105%);
+      transition: transform .26s ease;
+    }
+
+    .look-sheet-backdrop.show .look-sheet {
+      transform: translateY(0);
+    }
+
+    .look-sheet-handle {
+      width: 46px;
+      height: 5px;
+      justify-self: center;
+      border-radius: var(--pill);
+      background: rgba(21,18,23,.18);
+    }
+
+    .look-sheet-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 40px;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .look-sheet-eyebrow {
+      margin-bottom: 4px;
+      color: var(--red);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .look-sheet-title {
+      margin: 0;
+      color: var(--ink);
+      font-size: 21px;
+      font-weight: 600;
+      line-height: 1.18;
+    }
+
+    .look-sheet-sub {
+      margin: 6px 0 0;
+      color: rgba(21,18,23,.58);
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 1.48;
+    }
+
+    .look-sheet-close {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(21,18,23,.08);
+      border-radius: 50%;
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .look-sheet-products {
+      display: grid;
+      gap: 9px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .look-sheet-product {
+      display: grid;
+      grid-template-columns: 54px minmax(0, 1fr) auto 32px;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid rgba(21,18,23,.08);
+      border-radius: 16px;
+      background: #FFFCFA;
+    }
+
+    .look-sheet-swatch {
+      width: 54px;
+      height: 54px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      border-radius: 15px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.82), rgba(255,255,255,.42)),
+        var(--shade);
+    }
+
+    .look-sheet-swatch::before {
+      content: '';
+      width: 17px;
+      height: 31px;
+      border-radius: 10px 10px 6px 6px;
+      background: var(--shade);
+    }
+
+    .look-sheet-swatch.has-image {
+      background: #fff;
+    }
+
+    .look-sheet-swatch.has-image::before {
+      display: none;
+    }
+
+    .look-sheet-swatch img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+    }
+
+    .look-sheet-copy {
+      min-width: 0;
+    }
+
+    .look-sheet-copy strong,
+    .look-sheet-copy span {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .look-sheet-copy strong {
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+
+    .look-sheet-copy span {
+      margin-top: 3px;
+      color: rgba(21,18,23,.52);
+      font-size: 11px;
+      font-weight: 400;
+      line-height: 1.45;
+    }
+
+    .look-sheet-price {
+      color: var(--ink);
+      font-size: 15px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .look-sheet-remove {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(21,18,23,.08);
+      border-radius: 50%;
+      background: #fff;
+      color: rgba(21,18,23,.52);
+      cursor: pointer;
+    }
+
+    .look-sheet-remove:hover {
+      border-color: rgba(229,0,75,.28);
+      color: var(--red);
+    }
+
+    .look-sheet-empty {
+      padding: 18px;
+      border: 1px dashed rgba(21,18,23,.16);
+      border-radius: 16px;
+      color: rgba(21,18,23,.52);
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    .look-sheet-total {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding-top: 4px;
+    }
+
+    .look-sheet-total span {
+      color: rgba(21,18,23,.58);
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    .look-sheet-total strong {
+      display: block;
+      margin-top: 3px;
+      color: var(--ink);
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    @media (max-width: 390px) {
+      .intro-title,
+      .screen-title,
+      .bag-hero h1,
+      .done-wrap h1 { font-size: 28px; }
+      .cat-row { gap: 6px; }
+      .cat-tab { font-size: 10px; padding: 0 5px; }
+      .product-card {
+        width: 76px;
+        min-width: 76px;
+        height: 76px;
+      }
+      .product-mini {
+        width: 62px;
+        height: 64px;
+      }
+    }
+
+    :root button[class],
+    :root button[class] :is(span, strong, small, div) {
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-wrap">
+    <main class="app" aria-label="Avon makeup try-on app">
+      <header class="sdk-header">
+        <button class="sdk-back" type="button" id="header-back">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+          Back
+        </button>
+        <a href="homepage.html" class="sdk-logo">AVON</a>
+        <span class="sdk-spacer" aria-hidden="true"></span>
+      </header>
+
+      <section class="screen active" id="s1" data-label="Makeup Try-On">
+        <div class="intro-hero">
+          <div class="intro-content">
+            <div class="kicker">AR Makeup Try-On</div>
+            <h1 class="intro-title">Build the look before it reaches your bag</h1>
+            <p class="intro-copy">Try lipstick, eye colour, blush and base shades together, then compare, save and shop the exact set.</p>
+            <div class="intro-actions">
+              <button class="btn btn--soft" type="button" id="hero-upload">
+                Upload Image
+                <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+              </button>
+              <button class="btn" type="button" id="live-tryon">
+                Live Try-On
+                <svg class="icon" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              </button>
+              <input id="selfie-input" type="file" accept="image/*" hidden/>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="s4" data-label="Shade Matching">
+        <div class="analysis-wrap">
+          <div class="analysis-ring-wrap" aria-hidden="true">
+            <div class="analysis-ring"></div>
+            <div class="analysis-ring-inner"></div>
+            <div class="analysis-pct" id="analysis-pct">0%</div>
+          </div>
+          <h1 class="analysis-title">Creating your Avon try-on palette</h1>
+          <p class="analysis-copy">Balancing undertone, finish, contrast and product layering.</p>
+          <div class="analysis-steps">
+            <div class="analysis-step on" data-step="0"><span>1</span>Map facial zones</div>
+            <div class="analysis-step" data-step="1"><span>2</span>Match shade families</div>
+            <div class="analysis-step" data-step="2"><span>3</span>Build the full look</div>
+            <div class="analysis-step" data-step="3"><span>4</span>Prepare shopping set</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="s5" data-label="Try-On Studio">
+        <div class="studio">
+          <div class="tryon-frame" id="tryon-frame">
+            <video id="tryon-video" class="tryon-video" autoplay muted playsinline></video>
+            <img id="tryon-img" class="tryon-img" src="Makeup.png" alt="Face preview with virtual makeup"/>
+            <div class="look-layer" aria-hidden="true">
+              <span class="face-base"></span>
+              <span class="eye-shadow left"></span>
+              <span class="eye-shadow right"></span>
+              <span class="liner left"></span>
+              <span class="liner right"></span>
+              <span class="blush left"></span>
+              <span class="blush right"></span>
+              <span class="lip"></span>
+              <span class="gloss"></span>
+              <span class="glitter-fleck" style="left:31%;top:43%"></span>
+              <span class="glitter-fleck" style="left:37%;top:45%"></span>
+              <span class="glitter-fleck" style="left:66%;top:43%"></span>
+              <span class="glitter-fleck" style="left:72%;top:46%"></span>
+              <span class="glitter-fleck" style="left:73%;top:53%"></span>
+            </div>
+            <span class="compare-line" aria-hidden="true"></span>
+            <span class="compare-badge">Before / After</span>
+            <div class="studio-vignette"></div>
+          </div>
+
+          <div class="studio-ui">
+            <div>
+              <div class="studio-top">
+                <button class="icon-btn" type="button" data-go="s1" aria-label="Back">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+                </button>
+                <div class="studio-brand">AVON</div>
+                <div class="studio-actions">
+                  <button class="icon-btn" type="button" data-go="s6" aria-label="Open bag">
+                    <span class="bag-dot" id="studio-bag-count">0</span>
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                  </button>
+                  <button class="icon-btn" type="button" id="favorite-look" aria-label="Save look">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg>
+                  </button>
+                  <button class="icon-btn" type="button" data-go="s1" aria-label="Close studio">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="studio-bottom">
+              <div class="studio-mode-tabs" id="studio-mode-tabs" aria-label="Try-on controls">
+                <button class="studio-mode-tab active" type="button" data-panel="makeup">Makeup</button>
+                <button class="studio-mode-tab" type="button" data-panel="looks">Looks</button>
+              </div>
+              <div class="cat-row" id="category-tabs" aria-label="Makeup category tabs"></div>
+              <div class="control-deck" id="makeup-panel">
+                <div class="product-row" id="product-row" aria-label="Products"></div>
+                <div class="variant-row">
+                  <span class="variant-label">Choose variant</span>
+                  <div class="shade-row" id="shade-row" aria-label="Shade selector"></div>
+                </div>
+              </div>
+              <div class="look-deck" id="looks-panel" hidden>
+                <div class="look-row" id="look-row" aria-label="Complete looks"></div>
+              </div>
+              <div class="product-footer">
+                <div class="footer-info">
+                  <div class="footer-kicker" id="peek-name">Ultra Matte Lipstick</div>
+                  <div class="footer-price" id="peek-meta">Ruby Shock · Rs 499</div>
+                </div>
+                <button class="cart-pill" type="button" id="quick-add">Add to cart</button>
+                <button class="heart-btn" type="button" id="footer-heart" aria-label="Save product">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg>
+                </button>
+                <input type="range" min="20" max="100" value="78" id="intensity" hidden/>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="s6" data-label="Beauty Bag">
+        <div class="bag-hero">
+          <button class="btn btn--soft bag-back" type="button" data-go="s5">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+            Back to Try-On
+          </button>
+          <div class="bag-eyebrow">Avon Beauty Bag</div>
+          <h1>Your selected shades</h1>
+          <p>Review the look, add the full set if needed, then choose how you want it delivered.</p>
+        </div>
+        <div class="bag-body">
+          <div class="bag-chip-row">
+            <span id="bag-count-chip">0 shades</span>
+            <span>Try-on matched</span>
+            <span id="bag-total-chip">Rs 0 total</span>
+          </div>
+          <div class="bag-section-label">Selected Products</div>
+          <div id="bag-list"></div>
+          <div class="checkout-panel">
+            <div class="total-row">
+              <span>Beauty bag total</span>
+              <strong id="bag-total">Rs 0</strong>
+            </div>
+            <div class="checkout-modes" id="checkout-modes">
+              <button class="checkout-mode active" type="button" data-value="Home delivery">Home delivery<br/><span>2-4 days</span></button>
+              <button class="checkout-mode" type="button" data-value="Beauty advisor">Beauty advisor<br/><span>Assisted order</span></button>
+            </div>
+            <button class="btn" type="button" id="place-order" style="width:100%;">Place Order</button>
+          </div>
+          <div class="cart-actions">
+            <button class="btn btn--soft" type="button" id="bag-add-look">Add Full Look</button>
+            <button class="btn btn--soft" type="button" data-go="s5">Continue Trying Shades</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="s7" data-label="Look Saved">
+        <div class="done-wrap">
+          <div class="done-mark">
+            <svg class="icon" viewBox="0 0 24 24" style="width:34px;height:34px;"><path d="M20 6 9 17l-5-5"/></svg>
+          </div>
+          <h1>Your Avon look is saved</h1>
+          <p>The selected products, finish and checkout preference are ready for the next step.</p>
+          <div class="done-summary">
+            <div><span>Products</span><strong id="done-items">0 items</strong></div>
+            <div><span>Checkout</span><strong id="done-mode">Home delivery</strong></div>
+            <div><span>Total</span><strong id="done-total">Rs 0</strong></div>
+          </div>
+          <div class="bottom-action" style="margin-top:0;">
+            <button class="btn" type="button" data-go="s5">Return to Studio</button>
+            <a href="homepage.html" class="btn btn--soft">Back to Home</a>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast">Added to bag</div>
+  <div class="look-sheet-backdrop" id="look-sheet-backdrop" aria-hidden="true">
+    <div class="look-sheet" role="dialog" aria-modal="true" aria-labelledby="look-sheet-title">
+      <div class="look-sheet-handle" aria-hidden="true"></div>
+      <div class="look-sheet-head">
+        <div>
+          <div class="look-sheet-eyebrow">Complete Look</div>
+          <h2 class="look-sheet-title" id="look-sheet-title">Fresh Glow</h2>
+          <p class="look-sheet-sub" id="look-sheet-sub">Soft rose lip, bronze eye and peach cheek.</p>
+        </div>
+        <button class="look-sheet-close" type="button" id="look-sheet-close" aria-label="Close look details">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+      <div class="look-sheet-products" id="look-sheet-products"></div>
+      <div class="look-sheet-total">
+        <div>
+          <span id="look-sheet-count">3 products</span>
+          <strong id="look-sheet-total">Rs 0</strong>
+        </div>
+        <button class="cart-pill" type="button" id="look-sheet-add">Add to cart</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const icons = {
+      lips: '<svg class="icon" viewBox="0 0 24 24"><path d="M4 14c2.2-3.2 4.2-4.8 6-4.8 1.2 0 1.9.7 2.5.7s1.3-.7 2.5-.7c1.8 0 3.8 1.6 6 4.8-2.2 2.5-5 3.8-8.5 3.8S6.2 16.5 4 14Z"/><path d="M4 14h16"/></svg>',
+      eyes: '<svg class="icon" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>',
+      face: '<svg class="icon" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0 3 3 0 0 0-6 0"/><path d="M17 21a5 5 0 0 0-10 0"/><path d="M7 3h10"/></svg>'
+    };
+
+    const catalog = {
+      lips: [
+        { id: 'lip-hydra-nude', category: 'lips', categoryLabel: 'Lips', name: 'Avon Hydramatic Matte Lipstick -Hydra', shade: 'Nude', price: 849.15, color: '#A76758', finish: 'Hydramatic matte colour', match: 97, image: 'https://cdn.shopify.com/s/files/1/0713/1306/4175/files/C37309-1.jpg?v=1760355854', benefits: ['Matte colour', 'Hydra feel', 'Everyday nude'] },
+        { id: 'lip-hydra-siren', category: 'lips', categoryLabel: 'Lips', name: 'Avon Hydramatic Matte Lipstick -Hydra', shade: 'Siren Red', price: 849.15, color: '#B81733', finish: 'Hydramatic matte red', match: 96, image: 'https://cdn.shopify.com/s/files/1/0713/1306/4175/files/C37313-1_c113f87c-0f4e-496f-aca6-1bf9554fc100.jpg?v=1760423227', benefits: ['Bold red', 'Matte finish', 'Hydra comfort'] },
+        { id: 'lip-true-perfect', category: 'lips', categoryLabel: 'Lips', name: 'Avon True Color Lipstick', shade: 'Perfect Red', price: 339.15, color: '#C91E36', finish: 'Cream true colour', match: 94, image: 'https://cdn.shopify.com/s/files/1/0713/1306/4175/files/c26164_2.webp?v=1768825879', benefits: ['Cream colour', 'Classic red', 'Smooth glide'] },
+        { id: 'lip-true-berry', category: 'lips', categoryLabel: 'Lips', name: 'Avon True Color Lipstick', shade: 'Berry Bright', price: 359.10, color: '#8E3154', finish: 'Cream berry colour', match: 93, image: 'https://cdn.shopify.com/s/files/1/0713/1306/4175/files/c25147_1.webp?v=1768827554', benefits: ['Berry tone', 'Cream feel', 'Even colour'] },
+        { id: 'lip-pretty-romance', category: 'lips', categoryLabel: 'Lips', name: 'Avon Simply Pretty Colorbliss Lipstick', shade: 'Romance', price: 159.20, color: '#D55A75', finish: 'Soft lipstick colour', match: 92, image: 'https://cdn.shopify.com/s/files/1/0713/1306/4175/files/c27480_1__1_1.webp?v=1768822124', benefits: ['Soft colour', 'Value pick', 'Daily wear'] }
+      ],
+      eyes: [
+        { id: 'eye-red-majesty', category: 'eyes', categoryLabel: 'Eyes', name: 'Avon Red Majesty Wonderland Eyeshadow Palette 10.8g', shade: 'Red Majesty', price: 1039.20, color: '#8B3E49', finish: 'Wonderland eyeshadow palette', match: 95, image: 'https://cdn.shopify.com/s/files/1/0713/1306/4175/files/TrueColorWonderlandEyeshadowPalette-RedMajesty_C35282.png?v=1748929043', benefits: ['Palette payoff', 'Warm shimmer', 'Blendable shades'] },
+        { id: 'eye-powerstay', category: 'eyes', categoryLabel: 'Eyes', name: 'Avon True Color Powerstay Eyeliner', shade: 'Black', price: 359.10, color: '#151217', finish: 'Powerstay eyeliner', match: 97, image: 'https://cdn.shopify.com/s/files/1/0713/1306/4175/files/powerstay_eyeliner_c31082_1_1.webp?v=1768823513', benefits: ['Defined liner', 'Long wear', 'Sharp finish'] },
+        { id: 'eye-kajal-navy', category: 'eyes', categoryLabel: 'Eyes', name: 'Avon True Color Glimmerstick Kajal', shade: 'Deep Navy', price: 341.05, color: '#1B315B', finish: 'Glimmerstick kajal', match: 94, image: 'https://cdn.shopify.com/s/files/1/0713/1306/4175/files/Glimmerstick_Kajal_-_Deep_Navy_Shade-Deep_Navy_C24779_3.jpg?v=1770180037', benefits: ['Deep navy', 'No tug', 'Defined eyes'] },
+        { id: 'eye-kajal-plum', category: 'eyes', categoryLabel: 'Eyes', name: 'Avon True Color Glimmerstick Kajal', shade: 'Deep Plum', price: 296.65, color: '#4D2549', finish: 'Glimmerstick kajal', match: 92, image: 'https://cdn.shopify.com/s/files/1/0713/1306/4175/files/Glimmerstick_Kajal_-_Deep_Plum_Shade-Deep_Plum_C24781_3.jpg?v=1770180037', benefits: ['Plum definition', 'Soft glide', 'Evening tone'] },
+        { id: 'eye-pretty-liner', category: 'eyes', categoryLabel: 'Eyes', name: 'Avon Simply Pretty  Eyeliner', shade: 'Black', price: 159.20, color: '#101010', finish: 'Simply Pretty eyeliner', match: 91, image: 'https://cdn.shopify.com/s/files/1/0713/1306/4175/files/Artboard_1_0efac45c-0e2d-4315-a45e-86fc88e2b756.jpg?v=1728376716', benefits: ['Easy liner', 'Value pick', 'Everyday black'] }
+      ],
+      face: [
+        { id: 'face-foundation-honey', category: 'face', categoryLabel: 'Face', name: 'Avon Make Up+ Care Serum Foundation -Soft Honey 345N', shade: 'Soft Honey', price: 934.15, color: '#C58D61', base: '#C58D61', finish: 'Serum foundation', match: 95, image: 'https://cdn.shopify.com/s/files/1/0713/1306/4175/files/C38744.jpg?v=1763447354', benefits: ['Serum base', 'Soft honey tone', 'Even finish'] },
+        { id: 'face-foundation-beige', category: 'face', categoryLabel: 'Face', name: 'Avon Make Up+ Care Serum Foundation -Medium Beige - 310N', shade: 'Medium Beige', price: 934.15, color: '#C99C76', base: '#C99C76', finish: 'Serum foundation', match: 94, image: 'https://cdn.shopify.com/s/files/1/0713/1306/4175/files/C38743_90c26ca6-1d69-4f90-822d-fb8b5274dfcd.jpg?v=1765532578', benefits: ['Serum base', 'Medium beige', 'Natural coverage'] },
+        { id: 'face-powder-natural', category: 'face', categoryLabel: 'Face', name: 'Avon Flawless True Matte Pressed Powder - Natural 10 gm', shade: 'Natural', price: 679.15, color: '#D4B28E', base: '#D4B28E', finish: 'True matte pressed powder', match: 93, image: 'https://cdn.shopify.com/s/files/1/0713/1306/4175/files/C384131.jpg?v=1736245604', benefits: ['Matte finish', 'SPF 19', 'Touch-up compact'] },
+        { id: 'face-powder-neutral', category: 'face', categoryLabel: 'Face', name: 'Avon Flawless True Matte Pressed Powder - Neutral 10 gm', shade: 'Neutral', price: 679.15, color: '#C99A76', base: '#C99A76', finish: 'True matte pressed powder', match: 92, image: 'https://cdn.shopify.com/s/files/1/0713/1306/4175/files/C384151.jpg?v=1736242274', benefits: ['Matte finish', 'Neutral tone', 'Smooth coverage'] },
+        { id: 'face-pretty-powder', category: 'face', categoryLabel: 'Face', name: 'Avon Simply Pretty Shine No More Pressed Powder', shade: 'Shine No More', price: 299.00, color: '#D7B79A', base: '#D7B79A', finish: 'Pressed powder', match: 91, image: 'https://cdn.shopify.com/s/files/1/0713/1306/4175/files/3001794003-1_tssnjhhutpvvfaxi_custom.webp?v=1768824066', benefits: ['Shine control', 'Value pick', 'Compact finish'] }
+      ]
+    };
+
+    const looks = [
+      { id: 'fresh', name: 'Fresh Glow', sub: 'Romance lip, soft black liner and natural pressed powder.', picks: { lips: 4, eyes: 4, face: 2 }, intensity: 72 },
+      { id: 'party', name: 'Party Shine', sub: 'Berry lip, Red Majesty palette and Soft Honey base.', picks: { lips: 3, eyes: 0, face: 0 }, intensity: 86 },
+      { id: 'work', name: 'Work Polish', sub: 'Hydramatic nude lip, Deep Navy kajal and Neutral powder.', picks: { lips: 0, eyes: 2, face: 3 }, intensity: 64 },
+      { id: 'bold', name: 'Bold Red', sub: 'Siren Red lip, Powerstay liner and Medium Beige base.', picks: { lips: 1, eyes: 1, face: 1 }, intensity: 92 }
+    ];
+
+    const state = {
+      screen: 's1',
+      panel: 'makeup',
+      category: 'lips',
+      selected: { lips: 0, eyes: 0, face: 0 },
+      activeLook: 'fresh',
+      intensity: 78,
+      cart: [],
+      checkoutMode: 'Home delivery',
+      sheetLook: null,
+      sheetProducts: [],
+      stream: null,
+      liveCamera: false,
+      selfieUrl: null,
+      preferences: { finish: 'Fresh Glow', undertone: 'Neutral' }
+    };
+
+    const $ = (selector) => document.querySelector(selector);
+    const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+
+    function money(value) {
+      const options = Number.isInteger(value) ? {} : { minimumFractionDigits: 2, maximumFractionDigits: 2 };
+      return 'Rs ' + value.toLocaleString('en-IN', options);
+    }
+
+    function activeProduct() {
+      return catalog[state.category][state.selected[state.category]];
+    }
+
+    function selectedProduct(category) {
+      return catalog[category][state.selected[category]];
+    }
+
+    function activeLook() {
+      return looks.find((item) => item.id === state.activeLook) || looks[0];
+    }
+
+    function lookProducts(look = activeLook()) {
+      return Object.entries(look.picks).map(([category, index]) => catalog[category][index]);
+    }
+
+    function lookTotal(look = activeLook()) {
+      return lookProducts(look).reduce((sum, product) => sum + product.price, 0);
+    }
+
+    function showToast(message) {
+      const toast = $('#toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => toast.classList.remove('show'), 1700);
+    }
+
+    function goTo(screenId) {
+      if (screenId === 's4') {
+        runAnalysis();
+      }
+      if (screenId !== 's5') {
+        closeLookSheet();
+      }
+
+      $$('.screen').forEach((screen) => screen.classList.toggle('active', screen.id === screenId));
+      state.screen = screenId;
+      const screen = $('#' + screenId);
+      const screenLabel = $('#screen-label');
+      if (screenLabel) screenLabel.textContent = screen?.dataset.label || 'Makeup Try-On';
+
+      document.body.classList.toggle('studio-mode', screenId === 's5');
+      if (screenId === 's5') {
+        syncStudioVideo();
+        renderStudio();
+      }
+      if (screenId === 's6') {
+        renderBag();
+      }
+      if (screenId === 's7') {
+        renderDone();
+      }
+    }
+
+    function headerBack() {
+      const routes = { s1: 'home', s4: 's1', s5: 's1', s6: 's5', s7: 's6' };
+      const target = routes[state.screen] || 's1';
+      if (target === 'home') window.location.href = 'homepage.html';
+      else goTo(target);
+    }
+
+    async function startCamera() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showToast('Camera unavailable. Showing model preview.');
+        return;
+      }
+      try {
+        if (!state.stream) {
+          state.stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'user', width: { ideal: 960 }, height: { ideal: 1280 } },
+            audio: false
+          });
+        }
+        state.liveCamera = true;
+        syncStudioVideo();
+      } catch (error) {
+        state.liveCamera = false;
+        showToast('Camera unavailable. Showing model preview.');
+      }
+    }
+
+    function syncStudioVideo() {
+      const tryonVideo = $('#tryon-video');
+      const tryonImg = $('#tryon-img');
+
+      if (state.selfieUrl) {
+        tryonImg.src = state.selfieUrl;
+        tryonVideo.classList.remove('ready');
+        return;
+      }
+
+      tryonImg.src = 'Makeup.png';
+      if (state.stream && state.liveCamera) {
+        tryonVideo.srcObject = state.stream;
+        tryonVideo.play().then(() => tryonVideo.classList.add('ready')).catch(() => {
+          tryonVideo.classList.remove('ready');
+        });
+      } else {
+        tryonVideo.classList.remove('ready');
+      }
+    }
+
+    async function openLiveTryOn() {
+      state.selfieUrl = null;
+      goTo('s5');
+      await startCamera();
+    }
+
+    function loadSelfie(file) {
+      if (!file) return;
+      if (state.selfieUrl) URL.revokeObjectURL(state.selfieUrl);
+      state.selfieUrl = URL.createObjectURL(file);
+      state.liveCamera = false;
+      goTo('s5');
+      showToast('Image loaded');
+    }
+
+    function runAnalysis() {
+      const pct = $('#analysis-pct');
+      const steps = $$('.analysis-step');
+      let value = 0;
+      steps.forEach((step, index) => step.classList.toggle('on', index === 0));
+      window.clearInterval(runAnalysis.timer);
+      runAnalysis.timer = window.setInterval(() => {
+        value += 4;
+        pct.textContent = Math.min(value, 100) + '%';
+        const stepIndex = Math.min(3, Math.floor(value / 27));
+        steps.forEach((step, index) => step.classList.toggle('on', index <= stepIndex));
+        if (value >= 100) {
+          window.clearInterval(runAnalysis.timer);
+          setTimeout(() => goTo('s5'), 280);
+        }
+      }, 70);
+    }
+
+    function applyLook(lookId, quiet = false) {
+      const look = looks.find((item) => item.id === lookId);
+      if (!look) return;
+      state.activeLook = look.id;
+      state.selected = { ...state.selected, ...look.picks };
+      state.intensity = look.intensity;
+      $('#intensity').value = String(look.intensity);
+      renderStudio();
+      if (!quiet) showToast(look.name + ' applied');
+    }
+
+    function renderLookSheet(look) {
+      const products = state.sheetProducts;
+      $('#look-sheet-title').textContent = look.name;
+      $('#look-sheet-sub').textContent = look.sub;
+      $('#look-sheet-count').textContent = products.length + (products.length === 1 ? ' product' : ' products');
+      $('#look-sheet-total').textContent = money(products.reduce((sum, product) => sum + product.price, 0));
+      $('#look-sheet-products').innerHTML = products.length ? products.map((product) => `
+        <div class="look-sheet-product">
+          <span class="look-sheet-swatch ${product.image ? 'has-image' : ''}" style="--shade:${product.color}">
+            ${product.image ? `<img src="${product.image}" alt="${product.name} - ${product.shade}" loading="lazy">` : ''}
+          </span>
+          <span class="look-sheet-copy">
+            <strong>${product.name}</strong>
+            <span>${product.categoryLabel} · ${product.shade} · ${product.finish}</span>
+          </span>
+          <span class="look-sheet-price">${money(product.price)}</span>
+          <button class="look-sheet-remove" type="button" data-remove-product="${product.id}" aria-label="Remove ${product.name}">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+      `).join('') : '<div class="look-sheet-empty">All products removed from this look. Add one back by reopening the look card.</div>';
+      $('#look-sheet-add').disabled = products.length === 0;
+    }
+
+    function openLookSheet(lookId) {
+      const look = looks.find((item) => item.id === lookId);
+      if (!look) return;
+      state.sheetLook = look.id;
+      state.sheetProducts = lookProducts(look);
+      applyLook(look.id, true);
+      renderLookSheet(look);
+      const sheet = $('#look-sheet-backdrop');
+      sheet.classList.add('show');
+      sheet.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeLookSheet() {
+      const sheet = $('#look-sheet-backdrop');
+      if (!sheet) return;
+      sheet.classList.remove('show');
+      sheet.setAttribute('aria-hidden', 'true');
+    }
+
+    function removeSheetProduct(productId) {
+      const look = looks.find((item) => item.id === state.sheetLook) || activeLook();
+      state.sheetProducts = state.sheetProducts.filter((product) => product.id !== productId);
+      renderLookSheet(look);
+    }
+
+    function setPanel(panel) {
+      state.panel = panel;
+      if (panel === 'looks' && !looks.some((look) => look.id === state.activeLook)) {
+        const fallback = looks[0];
+        state.activeLook = fallback.id;
+        state.selected = { ...state.selected, ...fallback.picks };
+        state.intensity = fallback.intensity;
+        $('#intensity').value = String(fallback.intensity);
+      }
+      renderStudio();
+    }
+
+    function setCategory(category) {
+      state.category = category;
+      state.panel = 'makeup';
+      renderStudio();
+    }
+
+    function setProduct(category, index) {
+      state.selected[category] = index;
+      state.activeLook = '';
+      renderStudio();
+    }
+
+    function updateCssVars() {
+      const lips = selectedProduct('lips');
+      const eyes = selectedProduct('eyes');
+      const face = selectedProduct('face');
+      document.documentElement.style.setProperty('--lip-color', lips.color);
+      document.documentElement.style.setProperty('--eye-color', eyes.color);
+      document.documentElement.style.setProperty('--blush-color', face.color);
+      document.documentElement.style.setProperty('--base-color', face.base || face.color);
+      document.documentElement.style.setProperty('--tryon-strength', (state.intensity / 100).toFixed(2));
+      const intensityValue = $('#intensity-value');
+      if (intensityValue) intensityValue.textContent = state.intensity + '%';
+    }
+
+    function renderStudio() {
+      updateCssVars();
+      const showingLooks = state.panel === 'looks';
+      const product = activeProduct();
+      const look = activeLook();
+      const productsInLook = lookProducts(look);
+
+      $$('.studio-mode-tab').forEach((tab) => tab.classList.toggle('active', tab.dataset.panel === state.panel));
+      $('#category-tabs').hidden = showingLooks;
+      $('#makeup-panel').hidden = showingLooks;
+      $('#looks-panel').hidden = !showingLooks;
+
+      $('#peek-name').textContent = showingLooks ? look.name : product.name;
+      $('#peek-meta').textContent = showingLooks
+        ? productsInLook.length + ' products · ' + money(lookTotal(look))
+        : product.shade + ' · ' + money(product.price);
+      $('#quick-add').textContent = showingLooks ? 'Add look' : 'Add to cart';
+
+      const categoryLabels = {
+        lips: 'Lipstick',
+        eyes: 'Eyes',
+        face: 'Face'
+      };
+
+      $('#category-tabs').innerHTML = Object.keys(catalog).map((category) => `
+        <button class="cat-tab ${state.category === category ? 'active' : ''}" type="button" data-category="${category}">
+          ${icons[category]} ${categoryLabels[category]}
+        </button>
+      `).join('');
+
+      $('#shade-row').innerHTML = catalog[state.category].map((item, index) => `
+        <button class="shade-btn ${state.selected[state.category] === index ? 'active' : ''}" type="button" style="--shade:${item.color}" data-product-index="${index}">
+          <span class="sr-name">${item.shade}</span>
+        </button>
+      `).join('');
+
+      $('#product-row').innerHTML = catalog[state.category].map((item, index) => `
+        <button class="product-card ${state.selected[state.category] === index ? 'active' : ''}" type="button" data-product-index="${index}">
+          <span class="product-mini ${item.image ? 'has-image' : ''}" style="--shade:${item.color}">
+            ${item.image ? `<img src="${item.image}" alt="${item.name} - ${item.shade}" loading="lazy">` : ''}
+          </span>
+          <span class="product-text">
+            <strong>${item.shade}</strong>
+            <span>${item.name}</span>
+          </span>
+        </button>
+      `).join('');
+
+      const lookPositions = ['center 16%', '58% 20%', '44% 30%', 'center 36%'];
+      $('#look-row').innerHTML = looks.map((item, index) => {
+        const bundle = lookProducts(item);
+        return `
+          <button class="look-card ${state.activeLook === item.id ? 'active' : ''}" type="button" data-look="${item.id}" style="--look-accent:${bundle[0].color};--look-pos:${lookPositions[index] || 'center top'}">
+            <span class="look-card-image" aria-hidden="true"></span>
+            <span class="look-card-title">${item.name}</span>
+          </button>
+        `;
+      }).join('');
+      updateBagCount();
+    }
+
+    function addToCart(product = activeProduct(), quiet = false) {
+      const key = product.id + ':' + product.shade;
+      const existing = state.cart.find((item) => item.key === key);
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        state.cart.push({ ...product, key, qty: 1 });
+      }
+      updateBagCount();
+      renderBag();
+      if (!quiet) showToast(product.shade + ' added to bag');
+    }
+
+    function addLookToCart(look = activeLook()) {
+      lookProducts(look).forEach((product) => addToCart(product, true));
+      showToast(look.name + ' added to bag');
+    }
+
+    function addFullLook() {
+      ['lips', 'eyes', 'face'].forEach((category) => addToCart(selectedProduct(category), true));
+      showToast('Full look added');
+    }
+
+    function updateBagCount() {
+      const count = state.cart.reduce((sum, item) => sum + item.qty, 0);
+      $$('.bag-dot').forEach((dot) => {
+        dot.textContent = String(count);
+        dot.classList.toggle('on', count > 0);
+      });
+    }
+
+    function cartTotal() {
+      return state.cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+    }
+
+    function renderBag() {
+      const bag = $('#bag-list');
+      if (!bag) return;
+      const count = state.cart.reduce((sum, item) => sum + item.qty, 0);
+      const total = money(cartTotal());
+      if (!state.cart.length) {
+        bag.innerHTML = '<div class="empty-bag">Your bag is empty. Add a shade or the full look from the studio.</div>';
+      } else {
+        bag.innerHTML = state.cart.map((item) => `
+          <div class="bag-line">
+            <span class="bag-swatch ${item.image ? 'has-image' : ''}" style="--shade:${item.color}">
+              ${item.image ? `<img src="${item.image}" alt="${item.name} - ${item.shade}" loading="lazy">` : ''}
+            </span>
+            <span class="bag-info">
+              <strong>${item.name}</strong>
+              <em>${item.categoryLabel} · ${item.shade} · Qty ${item.qty}</em>
+              <span>${item.finish}</span>
+            </span>
+            <span class="bag-price">${money(item.price * item.qty)}</span>
+          </div>
+        `).join('');
+      }
+      $('#bag-total').textContent = total;
+      $('#bag-count-chip').textContent = count + (count === 1 ? ' shade' : ' shades');
+      $('#bag-total-chip').textContent = total + ' total';
+      updateBagCount();
+    }
+
+    function renderDone() {
+      const count = state.cart.reduce((sum, item) => sum + item.qty, 0);
+      $('#done-items').textContent = count + (count === 1 ? ' item' : ' items');
+      $('#done-mode').textContent = state.checkoutMode;
+      $('#done-total').textContent = money(cartTotal());
+    }
+
+    function wireEvents() {
+      document.addEventListener('click', (event) => {
+        const go = event.target.closest('[data-go]');
+        if (go) {
+          goTo(go.dataset.go);
+          return;
+        }
+
+        const panel = event.target.closest('[data-panel]');
+        if (panel) {
+          setPanel(panel.dataset.panel);
+          return;
+        }
+
+        const removeProduct = event.target.closest('[data-remove-product]');
+        if (removeProduct) {
+          removeSheetProduct(removeProduct.dataset.removeProduct);
+          return;
+        }
+
+        const category = event.target.closest('[data-category]');
+        if (category) {
+          setCategory(category.dataset.category);
+          return;
+        }
+
+        const product = event.target.closest('[data-product-index]');
+        if (product) {
+          setProduct(state.category, Number(product.dataset.productIndex));
+          return;
+        }
+
+        const look = event.target.closest('[data-look]');
+        if (look) {
+          applyLook(look.dataset.look);
+          return;
+        }
+      });
+
+      $('#header-back').addEventListener('click', headerBack);
+      $('#live-tryon').addEventListener('click', openLiveTryOn);
+      $('#hero-upload').addEventListener('click', () => $('#selfie-input').click());
+      $('#selfie-input').addEventListener('change', (event) => loadSelfie(event.target.files[0]));
+      $('#intensity').addEventListener('input', (event) => {
+        state.intensity = Number(event.target.value);
+        state.activeLook = '';
+        updateCssVars();
+      });
+      $('#quick-add').addEventListener('click', () => {
+        if (state.panel === 'looks') {
+          openLookSheet(state.activeLook);
+        } else {
+          addToCart();
+        }
+      });
+      $('#footer-heart').addEventListener('click', () => showToast(state.panel === 'looks' ? 'Look saved' : 'Product saved'));
+      $('#bag-add-look').addEventListener('click', addFullLook);
+      $('#favorite-look').addEventListener('click', () => showToast('Look saved'));
+      $('#look-sheet-close').addEventListener('click', closeLookSheet);
+      $('#look-sheet-backdrop').addEventListener('click', (event) => {
+        if (event.target.id === 'look-sheet-backdrop') closeLookSheet();
+      });
+      $('#look-sheet-add').addEventListener('click', () => {
+        const look = looks.find((item) => item.id === state.sheetLook) || activeLook();
+        if (!state.sheetProducts.length) {
+          showToast('Add at least one product');
+          return;
+        }
+        state.sheetProducts.forEach((product) => addToCart(product, true));
+        showToast(look.name + ' added to bag');
+        closeLookSheet();
+      });
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeLookSheet();
+      });
+
+      $('#checkout-modes').addEventListener('click', (event) => {
+        const mode = event.target.closest('.checkout-mode');
+        if (!mode) return;
+        $$('.checkout-mode').forEach((item) => item.classList.remove('active'));
+        mode.classList.add('active');
+        state.checkoutMode = mode.dataset.value;
+      });
+
+      $('#place-order').addEventListener('click', () => {
+        if (!state.cart.length) addFullLook();
+        goTo('s7');
+      });
+    }
+
+    wireEvents();
+    applyLook('fresh', true);
+    renderStudio();
+  </script>
+</body>
+</html>
