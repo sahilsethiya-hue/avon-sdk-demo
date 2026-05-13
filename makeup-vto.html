@@ -2025,8 +2025,7 @@
     const looks = [
       { id: 'fresh', name: 'Fresh Glow', sub: 'Romance lip, soft black liner and natural pressed powder.', picks: { lips: 4, eyes: 4, face: 2 }, intensity: 72, image: 'image02.png', imagePosition: 'center 42%' },
       { id: 'party', name: 'Party Shine', sub: 'Berry lip, Red Majesty palette and Soft Honey base.', picks: { lips: 3, eyes: 0, face: 0 }, intensity: 86, image: 'image03.png', imagePosition: 'center 38%' },
-      { id: 'work', name: 'Work Polish', sub: 'Hydramatic nude lip, Deep Navy kajal and Neutral powder.', picks: { lips: 0, eyes: 2, face: 3 }, intensity: 64, image: 'image01.png', imagePosition: 'center 38%' },
-      { id: 'bold', name: 'Bold Red', sub: 'Siren Red lip, Powerstay liner and Medium Beige base.', picks: { lips: 1, eyes: 1, face: 1 }, intensity: 92 }
+      { id: 'work', name: 'Work Polish', sub: 'Hydramatic nude lip, Deep Navy kajal and Neutral powder.', picks: { lips: 0, eyes: 2, face: 3 }, intensity: 64, image: 'image01.png', imagePosition: 'center 38%' }
     ];
 
     const state = {
@@ -2335,7 +2334,7 @@
         </button>
       `).join('');
 
-      const lookPositions = ['center 16%', '58% 20%', '44% 30%', 'center 36%'];
+      const lookPositions = ['center 16%', '58% 20%', '44% 30%'];
       $('#look-row').innerHTML = looks.map((item, index) => {
         const bundle = lookProducts(item);
         const image = item.image ? `url('${item.image}')` : 'url("Makeup.png")';
